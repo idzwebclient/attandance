@@ -15,8 +15,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/icon-192.png" alt="" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-sm" />
           <div className="text-3xl font-bold text-brand">Hadir</div>
-          <p className="text-sm text-muted">Sistem kehadiran pekerja</p>
+          <p className="text-sm text-muted">Log masuk untuk rekod kehadiran</p>
         </div>
         <Card>
           <LoginForm

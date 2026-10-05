@@ -18,7 +18,7 @@ export function Badge({ tone = "neutral", children }: { tone?: Tone; children: R
 }
 
 export function Card({ className = "", ...props }: ComponentProps<"div">) {
-  return <div className={`rounded-xl border border-border bg-surface p-4 ${className}`} {...props} />;
+  return <div className={`rounded-2xl border border-border bg-surface p-4 shadow-sm ${className}`} {...props} />;
 }
 
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
@@ -40,7 +40,7 @@ const BUTTON = {
 };
 
 export function buttonClass(variant: keyof typeof BUTTON = "primary", extra = "") {
-  return `inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${BUTTON[variant]} ${extra}`;
+  return `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 ${BUTTON[variant]} ${extra}`;
 }
 
 export function Button({
@@ -52,7 +52,7 @@ export function Button({
 }
 
 export const inputClass =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-base sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+  "w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-base sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -74,8 +74,8 @@ export function Empty({ children }: { children: ReactNode }) {
 
 export function Table({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-      <table className="w-full text-sm [&_td]:px-3 [&_td]:py-2 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted [&_th]:whitespace-nowrap [&_tbody_tr]:border-t [&_tbody_tr]:border-border">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
+      <table className="w-full text-sm [&_td]:px-3 [&_td]:py-2 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted [&_th]:whitespace-nowrap [&_thead]:bg-neutral-bg [&_tbody_tr]:border-t [&_tbody_tr]:border-border">
         {children}
       </table>
     </div>

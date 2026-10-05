@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScannerView } from "@/components/qr-scanner";
+import { Icon, type IconName } from "@/components/icons";
 import { Badge, Button, Card, Notice } from "@/components/ui";
 import {
   ARRIVAL_LABEL,
@@ -129,6 +130,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
   const day = ctx.day;
   const status = ctx.completion_status;
   const busy = phase.kind === "busy";
+  const doneIndex = STEPS.findLastIndex(({ field }) => day?.[field]);
 
   return (
     <div className="mx-auto max-w-md space-y-4">
@@ -139,60 +141,108 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         />
       )}
 
-      <div>
-        <p className="text-sm text-muted">{formatDate(ctx.today, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
-        <h1 className="text-xl font-semibold">Hai, {ctx.profile.full_name.split(" ")[0]}</h1>
-        <p className="text-sm text-muted">{ctx.branch?.name ?? "Tiada cawangan"}</p>
+      <div className="rounded-2xl bg-brand p-5 text-brand-fg shadow-sm">
+        <p className="text-sm opacity-90">Hai, {ctx.profile.full_name.split(" ")[0]} 👋</p>
+        <LiveClock tz={ctx.timezone} />
+        <p className="text-sm opacity-90">
+          {formatDate(ctx.today, { weekday: "long", day: "numeric", month: "long" })}
+        </p>
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-xs">
+          <Icon name="pin" className="h-3.5 w-3.5" />
+          {ctx.branch?.name ?? "Tiada cawangan"}
+        </p>
       </div>
 
-      <Card className="space-y-4 text-center">
-        <Badge tone={COMPLETION_TONE[status]}>{COMPLETION_LABEL[status]}</Badge>
-
+      <Card className="space-y-4 !p-5">
         {phase.kind === "done" ? (
-          <div className="space-y-1 py-2">
-            <div className="text-4xl">✓</div>
-            <p className="text-lg font-semibold">{EVENT_LABEL[phase.result.event_type]} direkodkan</p>
-            <p className="text-3xl font-bold tabular-nums">{formatTime(phase.result.recorded_at, ctx.timezone)}</p>
+          <div className="space-y-2 py-2 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-good-bg text-good">
+              <Icon name="check" className="h-9 w-9" />
+            </div>
+            <p className="text-lg font-semibold">{EVENT_LABEL[phase.result.event_type]} berjaya</p>
+            <p className="text-4xl font-bold tabular-nums">{formatTime(phase.result.recorded_at, ctx.timezone)}</p>
             {phase.result.is_remote_break && <Badge tone="info">Rehat di luar cawangan</Badge>}
             <ResultStatus result={phase.result} />
-            <Button variant="secondary" className="mt-3" onClick={() => setPhase({ kind: "idle" })}>OK</Button>
+            <Button variant="secondary" className="mt-2 w-full py-3" onClick={() => setPhase({ kind: "idle" })}>
+              OK
+            </Button>
           </div>
         ) : ctx.next_events.length === 0 ? (
-          <p className="py-4 text-muted">Kehadiran hari ini sudah lengkap. Jumpa esok!</p>
+          <div className="space-y-2 py-4 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-good-bg text-good">
+              <Icon name="check" className="h-9 w-9" />
+            </div>
+            <p className="text-lg font-semibold">Kerja hari ini selesai</p>
+            <p className="text-sm text-muted">Terima kasih! Jumpa esok.</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {phase.kind === "error" && <Notice tone="bad">{phase.message}</Notice>}
+            <div className="text-center">
+              <Badge tone={COMPLETION_TONE[status]}>{COMPLETION_LABEL[status]}</Badge>
+            </div>
+            {phase.kind === "error" && (
+              <div className="flex gap-2 rounded-xl bg-bad-bg p-3 text-sm text-bad">
+                <Icon name="alert" className="mt-0.5 h-5 w-5 shrink-0" />
+                <span>{phase.message}</span>
+              </div>
+            )}
             {ctx.next_events.map((event, i) => (
-              <Button
+              <button
                 key={event}
-                variant={i === 0 ? "primary" : "secondary"}
+                type="button"
                 disabled={busy}
                 onClick={() => start(event)}
-                className={i === 0 ? "w-full py-6 text-lg" : "w-full py-4"}
+                className={`flex w-full items-center justify-center gap-3 rounded-2xl font-semibold transition active:scale-[0.98] disabled:opacity-60 ${
+                  i === 0 ? "bg-brand py-6 text-xl text-brand-fg shadow-md" : "border-2 border-border bg-white py-4 text-base"
+                }`}
               >
-                {busy && i === 0 ? phase.label : EVENT_LABEL[event]}
-              </Button>
+                {busy && i === 0 ? (
+                  <>
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {phase.label}
+                  </>
+                ) : (
+                  <>
+                    <Icon name={EVENT_ICON[event]} className={i === 0 ? "h-7 w-7" : "h-5 w-5"} />
+                    {EVENT_LABEL[event]}
+                  </>
+                )}
+              </button>
             ))}
-            <p className="text-xs text-muted">
-              {pendingQr ? "Kod QR cawangan sudah diimbas. " : ""}
-              Lokasi anda akan disemak. Imbas kod QR cawangan apabila diminta.
+            <p className="text-center text-xs text-muted">
+              {pendingQr
+                ? "Kod QR sudah diimbas. Tekan butang di atas."
+                : "Tekan butang, kemudian imbas kod QR di kedai jika diminta."}
             </p>
           </div>
         )}
       </Card>
 
-      <Card>
-        <h2 className="mb-3 font-medium">Hari ini</h2>
-        <ol className="space-y-2">
-          {STEPS.map(({ event, field }) => (
-            <li key={event} className="flex items-center justify-between text-sm">
-              <span className={day?.[field] ? "" : "text-muted"}>{EVENT_LABEL[event]}</span>
-              <span className="font-medium tabular-nums">{formatTime(day?.[field] as string | null, ctx.timezone)}</span>
-            </li>
-          ))}
+      <Card className="!p-5">
+        <h2 className="mb-4 font-semibold">Hari ini</h2>
+        <ol className="relative space-y-4">
+          {STEPS.map(({ event, field }, i) => {
+            const at = day?.[field] as string | null | undefined;
+            const skipped = !at && i < doneIndex;
+            return (
+              <li key={event} className="flex items-center gap-3">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    at ? "bg-brand text-brand-fg" : "bg-neutral-bg text-muted"
+                  }`}
+                >
+                  <Icon name={at ? "check" : EVENT_ICON[event]} className="h-4 w-4" />
+                </span>
+                <span className={`flex-1 ${at ? "font-medium" : "text-muted"}`}>{EVENT_LABEL[event]}</span>
+                <span className="font-semibold tabular-nums">
+                  {at ? formatTime(at, ctx.timezone) : skipped ? <span className="text-xs font-normal text-muted">Tiada</span> : "—"}
+                </span>
+              </li>
+            );
+          })}
         </ol>
-        {day && (
-          <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+        {day && (day.arrival_status || day.break_status || (day.departure_status && day.work_out_at)) && (
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
             {day.arrival_status && (
               <Badge tone={ARRIVAL_TONE[day.arrival_status]}>
                 {ARRIVAL_LABEL[day.arrival_status]}
@@ -215,6 +265,31 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
   );
 }
 
+const EVENT_ICON: Record<EventType, IconName> = {
+  WORK_IN: "login",
+  BREAK_OUT: "coffee",
+  BREAK_IN: "back",
+  WORK_OUT: "logout",
+};
+
+function LiveClock({ tz }: { tz: string }) {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    const first = setTimeout(tick, 0);
+    const id = setInterval(tick, 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
+  }, []);
+  return (
+    <p className="my-1 text-5xl font-bold tracking-tight tabular-nums">
+      {now ? formatTime(now.toISOString(), tz) : "--:--"}
+    </p>
+  );
+}
+
 function ResultStatus({ result }: { result: Extract<SubmitResult, { ok: true }> }) {
   const d = result.day;
   switch (result.event_type) {
@@ -222,8 +297,8 @@ function ResultStatus({ result }: { result: Extract<SubmitResult, { ok: true }> 
       return d.arrival_status ? (
         <p className="text-sm text-muted">
           {ARRIVAL_LABEL[d.arrival_status]}
-          {d.late_minutes > 0 && ` · lewat ${minutes(d.late_minutes)}`}
-          {d.early_arrival_minutes > 0 && ` · awal ${minutes(d.early_arrival_minutes)}`}
+          {d.late_minutes > 0 && ` ${minutes(d.late_minutes)}`}
+          {d.early_arrival_minutes > 0 && ` ${minutes(d.early_arrival_minutes)}`}
         </p>
       ) : null;
     case "BREAK_IN":

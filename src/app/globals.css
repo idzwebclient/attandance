@@ -1,43 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f9;
+  /* Light theme only. */
+  color-scheme: light;
+  --background: #f5f7f8;
   --surface: #ffffff;
-  --foreground: #14171c;
-  --muted: #5f6b7a;
-  --border: #e2e6eb;
+  --foreground: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
   --brand: #0f766e;
   --brand-fg: #ffffff;
+  --brand-soft: #e6f4f2;
   --good: #15803d;
   --good-bg: #dcfce7;
   --warn: #a16207;
-  --warn-bg: #fef9c3;
+  --warn-bg: #fef3c7;
   --bad: #b91c1c;
   --bad-bg: #fee2e2;
   --info: #1d4ed8;
   --info-bg: #dbeafe;
-  --neutral-bg: #eef1f4;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0d1014;
-    --surface: #161b21;
-    --foreground: #e8ecf1;
-    --muted: #96a2b1;
-    --border: #2a323c;
-    --brand: #2dd4bf;
-    --brand-fg: #04201d;
-    --good: #4ade80;
-    --good-bg: #12301d;
-    --warn: #facc15;
-    --warn-bg: #352d0a;
-    --bad: #f87171;
-    --bad-bg: #3a1515;
-    --info: #93c5fd;
-    --info-bg: #142a4a;
-    --neutral-bg: #222932;
-  }
+  --neutral-bg: #f1f3f5;
 }
 
 @theme inline {
@@ -48,6 +30,7 @@
   --color-border: var(--border);
   --color-brand: var(--brand);
   --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-warn: var(--warn);

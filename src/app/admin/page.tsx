@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <PageTitle title="Dashboard" subtitle={`Semua cawangan · ${formatDate(today, { dateStyle: "full" })}`} />
+      <PageTitle title="Hari ini" subtitle={`Semua cawangan · ${formatDate(today, { dateStyle: "full" })}`} />
       <BoardStats counts={countBoard(board)} />
       <Card className="!p-0">
         <Table>

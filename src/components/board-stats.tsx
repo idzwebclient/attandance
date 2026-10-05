@@ -16,9 +16,9 @@ export function BoardStats({ counts, past }: { counts: ReturnType<typeof countBo
   return (
     <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
       {items.map((i) => (
-        <Card key={i.label} className="!p-3">
+        <Card key={i.label} className={`!p-3 ${i.bad && i.value > 0 ? "!border-bad/30 !bg-bad-bg" : ""}`}>
           <div className="text-xs text-muted">{i.label}</div>
-          <div className={`text-2xl font-semibold tabular-nums ${i.bad && i.value > 0 ? "text-bad" : ""}`}>{i.value}</div>
+          <div className={`text-2xl font-bold tabular-nums ${i.bad && i.value > 0 ? "text-bad" : ""}`}>{i.value}</div>
         </Card>
       ))}
     </div>
