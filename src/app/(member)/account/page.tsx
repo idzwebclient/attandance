@@ -3,6 +3,7 @@ import { Button, Card, PageTitle } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 import { PasswordForm } from "./password-form";
+import { PhoneGuide } from "./phone-guide";
 
 export const metadata: Metadata = { title: "Akaun" };
 
@@ -26,6 +27,7 @@ export default async function AccountPage() {
         <h2 className="mb-3 font-medium">Tukar kata laluan</h2>
         <PasswordForm />
       </Card>
+      <PhoneGuide />
       <form action={signOut}>
         <Button variant="danger" type="submit" className="w-full">Log keluar</Button>
       </form>
