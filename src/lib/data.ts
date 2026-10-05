@@ -90,6 +90,8 @@ export function buildDayBoard(
       departure_status: null,
       early_departure_minutes: 0,
       completion_status: "NOT_STARTED",
+      extra_minutes: 0,
+      extra_open: false,
       effective_status: "NOT_STARTED",
       full_name: e.full_name,
       employee_code: e.employee_code,

@@ -1,5 +1,5 @@
 export type Role = "staff" | "manager" | "admin";
-export type EventType = "WORK_IN" | "BREAK_OUT" | "BREAK_IN" | "WORK_OUT";
+export type EventType = "WORK_IN" | "BREAK_OUT" | "BREAK_IN" | "WORK_OUT" | "EXTRA_IN" | "EXTRA_OUT";
 export type ArrivalStatus = "EARLY" | "ON_TIME" | "LATE";
 export type BreakStatus = "WITHIN_LIMIT" | "BREAK_EXCEEDED" | "INCOMPLETE" | "NO_BREAK";
 export type DepartureStatus = "EARLY_DEPARTURE" | "COMPLETE" | "NOT_PUNCHED_OUT";
@@ -53,6 +53,8 @@ export type AttendanceDay = {
   departure_status: DepartureStatus | null;
   early_departure_minutes: number;
   completion_status: CompletionStatus;
+  extra_minutes: number;
+  extra_open: boolean;
 };
 
 export type AttendanceDayReport = AttendanceDay & {
@@ -91,6 +93,8 @@ export type MonthlySummaryRow = {
   completed_days: number;
   incomplete_days: number;
   absent_days: number;
+  extra_sessions: number;
+  total_extra_minutes: number;
 };
 
 export type AttendanceContext =

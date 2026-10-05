@@ -337,3 +337,52 @@ describe("punching after an admin correction", () => {
     expect(rows[0].n).toBe(2);
   });
 });
+
+describe("extra sessions after clocking out", () => {
+  async function finishDay() {
+    await punch(db, staff.authId, { at: at("01:00:00"), ...NEAR, qr: hq.qr_identifier });
+    await punch(db, staff.authId, { at: at("10:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "WORK_OUT" });
+  }
+
+  it("records an extra session with QR and location, without touching the day's stages", async () => {
+    await finishDay();
+    const start = await punch(db, staff.authId, { at: at("12:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_IN" });
+    expect(start).toMatchObject({ ok: true, event_type: "EXTRA_IN" });
+    expect(start.day).toMatchObject({ extra_open: true, completion_status: "COMPLETED", departure_status: "COMPLETE" });
+
+    const end = await punch(db, staff.authId, { at: at("13:30:40"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_OUT" });
+    expect(end.ok).toBe(true);
+    const { rows } = await db.query<Record<string, unknown>>(
+      "select extra_minutes, extra_open, to_char(work_out_at at time zone 'Asia/Kuala_Lumpur', 'HH24:MI') wo from attendance_days");
+    expect(rows[0]).toEqual({ extra_minutes: 90, extra_open: false, wo: "18:00" });
+
+    // A second extra session adds up.
+    await punch(db, staff.authId, { at: at("14:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_IN" });
+    await punch(db, staff.authId, { at: at("14:30:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_OUT" });
+    const sum = await db.query<Record<string, unknown>>(
+      "select extra_sessions, total_extra_minutes from attendance_summary('2026-10-01', '2026-10-31') where employee_code = 'S001'");
+    expect(sum.rows[0]).toEqual({ extra_sessions: 2, total_extra_minutes: 120 });
+  });
+
+  it("needs an explicit request, QR and the branch radius", async () => {
+    await finishDay();
+    expect((await punch(db, staff.authId, { at: at("12:00:00"), ...NEAR, qr: hq.qr_identifier })).code).toBe("DAY_COMPLETED");
+    expect((await punch(db, staff.authId, { at: at("12:00:00"), ...NEAR, intent: "EXTRA_IN" })).code).toBe("QR_REQUIRED");
+    expect((await punch(db, staff.authId, { at: at("12:00:00"), ...FAR, qr: hq.qr_identifier, intent: "EXTRA_IN" })).code).toBe("OUTSIDE_RADIUS");
+    expect((await punch(db, staff.authId, { at: at("12:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_OUT" })).code).toBe("INVALID_SEQUENCE");
+  });
+
+  it("is not offered before the day is complete", async () => {
+    await punch(db, staff.authId, { at: at("01:00:00"), ...NEAR, qr: hq.qr_identifier });
+    const r = await punch(db, staff.authId, { at: at("02:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_IN" });
+    expect(r.code).toBe("INVALID_SEQUENCE");
+  });
+
+  it("is visible to the employee but not writable", async () => {
+    await finishDay();
+    await punch(db, staff.authId, { at: at("12:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "EXTRA_IN" });
+    const mine = await asUser<{ n: number }>(db, staff.authId, "select count(*)::int n from attendance_extra_sessions");
+    expect(mine[0].n).toBe(1);
+    await expect(asUser(db, staff.authId, "update attendance_extra_sessions set minutes = 999")).rejects.toThrow(/permission denied/);
+  });
+});

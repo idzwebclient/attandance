@@ -55,6 +55,7 @@ export async function ReportsView({
     { label: "Lewat", value: sum("late_arrivals"), note: minutes(sum("total_late_minutes")), icon: "clock", bad: true },
     { label: "Rehat lebih", value: sum("excess_breaks"), note: minutes(sum("total_excess_break_minutes")), icon: "coffee", bad: true },
     { label: "Balik awal", value: sum("early_departures"), note: minutes(sum("total_early_departure_minutes")), icon: "logout", bad: true },
+    { label: "Kerja tambahan", value: sum("extra_sessions"), note: minutes(sum("total_extra_minutes")), icon: "login" },
   ];
 
   return (
@@ -93,7 +94,7 @@ export async function ReportsView({
         />
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {totals.map((t) => (
           <Card key={t.label} className={`!p-3 ${t.bad && t.value > 0 ? "!border-bad/30 !bg-bad-bg" : ""}`}>
             <div className="flex items-center gap-1.5 text-xs text-muted">

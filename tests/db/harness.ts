@@ -64,7 +64,7 @@ export type Punch = {
   lng: number;
   accuracy?: number | null;
   qr?: string | null;
-  intent?: "WORK_IN" | "BREAK_OUT" | "BREAK_IN" | "WORK_OUT" | null;
+  intent?: "WORK_IN" | "BREAK_OUT" | "BREAK_IN" | "WORK_OUT" | "EXTRA_IN" | "EXTRA_OUT" | null;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

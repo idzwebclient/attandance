@@ -117,8 +117,8 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
       const position = locate();
       if (pendingQr) {
         submit(event, position, pendingQr);
-      } else if (event === "WORK_IN" || event === "WORK_OUT") {
-        // QR is always required to start or end work: open the camera right away.
+      } else if (event !== "BREAK_OUT" && event !== "BREAK_IN") {
+        // QR is always required to start or end work (or extra work): open the camera right away.
         setPhase({ kind: "scan", event, position });
       } else {
         // Breaks need QR only inside the branch; the server answers QR_REQUIRED if so.
@@ -172,18 +172,52 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
               OK
             </Button>
           </div>
-        ) : ctx.next_events.length === 0 ? (
-          <div className="space-y-2 py-4 text-center">
+        ) : ctx.next_events[0] === "EXTRA_IN" ? (
+          <div className="space-y-3 py-2 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-good-bg text-good">
               <Icon name="check" className="h-9 w-9" />
             </div>
             <p className="text-lg font-semibold">Kerja hari ini selesai</p>
-            <p className="text-sm text-muted">Terima kasih! Jumpa esok.</p>
+            <p className="text-sm text-muted">
+              Terima kasih! Jumpa esok.
+              {day && day.extra_minutes > 0 && <> Kerja tambahan hari ini: {minutes(day.extra_minutes)}.</>}
+            </p>
+            {phase.kind === "error" && (
+              <div className="flex gap-2 rounded-xl bg-bad-bg p-3 text-left text-sm text-bad">
+                <Icon name="alert" className="mt-0.5 h-5 w-5 shrink-0" />
+                <span>{phase.message}</span>
+              </div>
+            )}
+            <div className="border-t border-border pt-3">
+              <p className="mb-2 text-xs text-muted">Dipanggil kerja semula?</p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => start("EXTRA_IN")}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-white py-3 font-semibold disabled:opacity-60"
+              >
+                {busy ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {phase.label}
+                  </>
+                ) : (
+                  <>
+                    <Icon name="login" className="h-5 w-5" />
+                    Masuk semula
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="text-center">
-              <Badge tone={COMPLETION_TONE[status]}>{COMPLETION_LABEL[status]}</Badge>
+              {day?.extra_open ? (
+                <Badge tone="info">Kerja tambahan</Badge>
+              ) : (
+                <Badge tone={COMPLETION_TONE[status]}>{COMPLETION_LABEL[status]}</Badge>
+              )}
             </div>
             {phase.kind === "error" && (
               <div className="flex gap-2 rounded-xl bg-bad-bg p-3 text-sm text-bad">
@@ -246,6 +280,12 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
             );
           })}
         </ol>
+        {day && (day.extra_minutes > 0 || day.extra_open) && (
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-info-bg px-3 py-2 text-sm text-info">
+            <span className="font-medium">Kerja tambahan</span>
+            <span className="tabular-nums">{day.extra_open ? "Sedang berjalan" : minutes(day.extra_minutes)}</span>
+          </div>
+        )}
         {day && (day.arrival_status || day.break_status || (day.departure_status && day.work_out_at)) && (
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
             {day.arrival_status && (
@@ -275,6 +315,8 @@ const EVENT_ICON: Record<EventType, IconName> = {
   BREAK_OUT: "coffee",
   BREAK_IN: "back",
   WORK_OUT: "logout",
+  EXTRA_IN: "login",
+  EXTRA_OUT: "logout",
 };
 
 function LiveClock({ tz }: { tz: string }) {

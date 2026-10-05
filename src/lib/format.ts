@@ -13,6 +13,8 @@ export const EVENT_LABEL: Record<EventType, string> = {
   BREAK_OUT: "Mula rehat",
   BREAK_IN: "Tamat rehat",
   WORK_OUT: "Tamat kerja",
+  EXTRA_IN: "Masuk semula",
+  EXTRA_OUT: "Tamat kerja tambahan",
 };
 
 export const ARRIVAL_LABEL: Record<ArrivalStatus, string> = {

@@ -24,6 +24,7 @@ const COLS = [
   { label: "Rehat lebih", get: (r: MonthlySummaryRow) => <Count n={r.excess_breaks} mins={r.total_excess_break_minutes} /> },
   { label: "Balik awal", get: (r: MonthlySummaryRow) => <Count n={r.early_departures} mins={r.total_early_departure_minutes} /> },
   { label: "Tak lengkap", get: (r: MonthlySummaryRow) => <Count n={r.incomplete_days} /> },
+  { label: "Kerja tambahan", get: (r: MonthlySummaryRow) => <Count n={r.extra_sessions} mins={r.total_extra_minutes} bad={false} /> },
 ];
 
 // Per-employee summary: a short table on desktop, cards on phones.

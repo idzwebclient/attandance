@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     csv = toCsv(
       ["Tarikh", "Cawangan", "No. pekerja", "Nama", "Masuk", "Status ketibaan", "Minit lewat", "Minit awal",
         "Mula rehat", "Tamat rehat", "Tempoh rehat (minit)", "Lebih rehat (minit)", "Keluar",
-        "Status kepulangan", "Minit balik awal", "Status"],
+        "Status kepulangan", "Minit balik awal", "Kerja tambahan (minit)", "Status"],
       rows.map((r) => [
         r.attendance_date, r.branch_name, r.employee_code, r.full_name, formatTime(r.work_in_at, tz),
         r.arrival_status ? ARRIVAL_LABEL[r.arrival_status] : "", r.late_minutes, r.early_arrival_minutes,
@@ -45,6 +45,7 @@ export async function GET(request: Request) {
         r.excess_break_minutes, formatTime(r.work_out_at, tz),
         r.departure_status && r.work_out_at ? DEPARTURE_LABEL[r.departure_status] : "",
         r.early_departure_minutes,
+        r.extra_minutes,
         r.missing ? (r.attendance_date < today ? "Tidak hadir" : "Belum masuk")
           : `${COMPLETION_LABEL[r.effective_status]}${r.break_status ? ` / Rehat: ${BREAK_LABEL[r.break_status]}` : ""}`,
       ]),
