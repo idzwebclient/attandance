@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
-import { buttonClass, inputClass } from "./ui";
+import { AutoSubmitForm } from "./auto-submit-form";
+import { inputClass } from "./ui";
 
-// Plain GET form, so filters live in the URL and pages stay server-rendered.
+// GET form that applies as soon as a field changes, so filters live in the URL
+// and there is no separate Filter button. Fields stack two per row on phones.
 export function FilterBar({ children }: { children: ReactNode }) {
   return (
-    <form className="no-print mb-4 flex flex-wrap items-end gap-3" method="get">
+    <AutoSubmitForm className="no-print mb-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
       {children}
-      <button type="submit" className={buttonClass("secondary")}>Tapis</button>
-    </form>
+    </AutoSubmitForm>
   );
 }
 

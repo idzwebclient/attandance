@@ -58,3 +58,13 @@ body {
     color: #000;
   }
 }
+
+/* iOS renders date pickers with their own size; make them fill their box. */
+input[type="date"],
+input[type="month"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+}

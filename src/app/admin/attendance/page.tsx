@@ -69,8 +69,11 @@ export default async function AdminAttendance({ searchParams }: PageProps<"/admi
         <FilterField label="Paparan">
           <SelectInput name="view" value={view} options={[{ value: "day", label: "Harian" }, { value: "month", label: "Bulanan" }]} />
         </FilterField>
-        <FilterField label="Tarikh (harian)"><DateInput value={date} /></FilterField>
-        <FilterField label="Bulan (bulanan)"><MonthInput value={month} /></FilterField>
+        {view === "day" ? (
+          <FilterField label="Tarikh"><DateInput value={date} /></FilterField>
+        ) : (
+          <FilterField label="Bulan"><MonthInput value={month} /></FilterField>
+        )}
         <FilterField label="Cawangan">
           <SelectInput name="branch" value={branchId ?? ""} allLabel="Semua cawangan"
             options={[...branchNames].map(([value, label]) => ({ value, label }))} />
