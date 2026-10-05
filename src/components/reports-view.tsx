@@ -31,7 +31,7 @@ export async function ReportsView({
 }) {
   const tz = settings.timezone;
   const today = todayIn(tz);
-  const { from, to } = pickRange(search.from, search.to, today);
+  const { from, to } = pickRange(search.from, search.to, today, settings.cycle_start_day);
   const branchId = fixedBranchId ?? (typeof search.branch === "string" && search.branch ? search.branch : null);
   const tab = search.tab === "daily" ? "daily" : "summary";
   const branchParam: Record<string, string> = branchId && !fixedBranchId ? { branch: branchId } : {};
@@ -68,7 +68,7 @@ export async function ReportsView({
 
       <Card className="no-print space-y-3">
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
-          {quickRanges(today).map((q) => {
+          {quickRanges(today, settings.cycle_start_day).map((q) => {
             const active = q.from === from && q.to === to;
             return (
               <Link

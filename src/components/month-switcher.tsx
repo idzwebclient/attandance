@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatMonth } from "@/lib/format";
+import { formatMonth, formatPeriod } from "@/lib/format";
 
 function shift(month: string, delta: number) {
   const [y, m] = month.split("-").map(Number);
@@ -8,7 +8,17 @@ function shift(month: string, delta: number) {
 }
 
 // ‹ Oktober 2026 › — big tap targets instead of a month input and a Filter button.
-export function MonthSwitcher({ month, current, href }: { month: string; current: string; href: (m: string) => string }) {
+export function MonthSwitcher({
+  month,
+  current,
+  startDay = 1,
+  href,
+}: {
+  month: string;
+  current: string;
+  startDay?: number;
+  href: (m: string) => string;
+}) {
   const next = shift(month, 1);
   const btn = "flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-white";
   return (
@@ -18,6 +28,9 @@ export function MonthSwitcher({ month, current, href }: { month: string; current
       </Link>
       <div className="text-center">
         <div className="font-semibold">{formatMonth(month)}</div>
+        {startDay > 1 && (
+          <div className="text-xs text-muted">{formatPeriod(month, startDay).replace(/^.*\(|\)$/g, "")}</div>
+        )}
         {month !== current && (
           <Link href={href(current)} className="text-xs text-brand">Kembali ke bulan ini</Link>
         )}

@@ -169,6 +169,7 @@ const settingsFields = z.object({
   max_location_accuracy_meters: z.coerce.number().int().min(5).max(5000),
   timezone: z.string().min(1),
   work_days: z.array(z.coerce.number().int().min(1).max(7)).min(1, "Pilih sekurang-kurangnya satu hari bekerja."),
+  cycle_start_day: z.coerce.number().int().min(1, "Hari mula kitaran 1–28.").max(28, "Hari mula kitaran 1–28."),
 });
 
 export async function updateSettings(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -181,6 +182,7 @@ export async function updateSettings(_prev: FormState, fd: FormData): Promise<Fo
     max_location_accuracy_meters: str(fd, "max_location_accuracy_meters"),
     timezone: str(fd, "timezone"),
     work_days: fd.getAll("work_days").map(String),
+    cycle_start_day: str(fd, "cycle_start_day"),
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
   if (parsed.data.work_start_time >= parsed.data.work_end_time) return { error: "Masa mula mesti sebelum masa tamat." };

@@ -16,9 +16,10 @@ export async function GET(request: Request) {
     return new Response("Forbidden", { status: 403 });
   }
   const url = new URL(request.url);
-  const tz = (await getSettings(supabase)).timezone;
+  const settings = await getSettings(supabase);
+  const tz = settings.timezone;
   const today = todayIn(tz);
-  const { from, to } = pickRange(url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined, today);
+  const { from, to } = pickRange(url.searchParams.get("from") ?? undefined, url.searchParams.get("to") ?? undefined, today, settings.cycle_start_day);
   // Managers are always limited to their own branch.
   const branchId = profile.role === "manager" ? profile.branch_id : url.searchParams.get("branch") || null;
   const span = from === to ? from : `${from}_${to}`;

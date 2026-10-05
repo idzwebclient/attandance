@@ -70,6 +70,7 @@ export type Settings = {
   max_location_accuracy_meters: number;
   timezone: string;
   work_days: number[];
+  cycle_start_day: number;
 };
 
 export type MonthlySummaryRow = {

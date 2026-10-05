@@ -7,7 +7,7 @@ import { MonthlySummaryTable } from "@/components/monthly-summary-table";
 import { Badge, Button, Card, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getBranchNames, getMonthlySummary, getMonthReports, getSettings, pickMonth, currentMonth } from "@/lib/data";
-import { formatMonth } from "@/lib/format";
+import { formatPeriod } from "@/lib/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/lib/types";
 import { resetPassword, setEmployeeActive, updateEmployee } from "../../actions";
@@ -21,12 +21,12 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
   const { data: p } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle<Profile>();
   if (!p) notFound();
   const settings = await getSettings(supabase);
-  const month = pickMonth((await searchParams).month, settings.timezone);
+  const month = pickMonth((await searchParams).month, settings);
   const [branchNames, { data: user }, rows, summary] = await Promise.all([
     getBranchNames(supabase),
     createAdminClient().auth.admin.getUserById(p.auth_user_id),
-    getMonthReports(supabase, month, { employeeId: p.id }),
-    getMonthlySummary(supabase, month, { employeeId: p.id }),
+    getMonthReports(supabase, month, settings, { employeeId: p.id }),
+    getMonthlySummary(supabase, month, settings, { employeeId: p.id }),
   ]);
   const branches = [...branchNames].map(([bid, name]) => ({ id: bid, name }));
 
@@ -68,8 +68,8 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
 
       {p.role !== "admin" && (
         <section className="space-y-3">
-          <h2 className="font-medium">Kehadiran · {formatMonth(month)}</h2>
-          <MonthSwitcher month={month} current={currentMonth(settings.timezone)} href={(m) => `/admin/employees/${p.id}?month=${m}`} />
+          <h2 className="font-medium">Kehadiran · {formatPeriod(month, settings.cycle_start_day)}</h2>
+          <MonthSwitcher month={month} startDay={settings.cycle_start_day} current={currentMonth(settings)} href={(m) => `/admin/employees/${p.id}?month=${m}`} />
           <MonthlySummaryTable rows={summary} />
           <AttendanceTable rows={rows} tz={settings.timezone} show={{ date: true }} dayHref={(r) => `/admin/attendance/${r.id}`} />
         </section>

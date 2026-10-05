@@ -46,3 +46,27 @@ describe("date ranges", () => {
     expect(pickRange(undefined, undefined, "2026-10-15")).toEqual({ from: "2026-10-01", to: "2026-10-15" });
   });
 });
+
+describe("reporting periods", () => {
+  it("runs from the start day to the day before, named by the end month", async () => {
+    const { periodRange, periodOf } = await import("@/lib/format");
+    expect(periodRange("2026-10", 25)).toEqual({ from: "2026-09-25", to: "2026-10-24" });
+    expect(periodRange("2026-01", 25)).toEqual({ from: "2025-12-25", to: "2026-01-24" });
+    expect(periodRange("2026-02", 1)).toEqual({ from: "2026-02-01", to: "2026-02-28" });
+    expect(periodOf("2026-10-05", 25)).toBe("2026-10");
+    expect(periodOf("2026-10-24", 25)).toBe("2026-10");
+    expect(periodOf("2026-10-25", 25)).toBe("2026-11");
+    expect(periodOf("2026-12-30", 25)).toBe("2027-01");
+    expect(periodOf("2026-10-25", 1)).toBe("2026-10");
+  });
+});
+
+describe("quick ranges with a 25th cycle", () => {
+  it("uses 25th-24th for this and last month", async () => {
+    const { quickRanges, pickRange } = await import("@/lib/format");
+    const r = Object.fromEntries(quickRanges("2026-10-05", 25).map((q) => [q.label, [q.from, q.to]]));
+    expect(r["Bulan ini"]).toEqual(["2026-09-25", "2026-10-05"]);
+    expect(r["Bulan lepas"]).toEqual(["2026-08-25", "2026-09-24"]);
+    expect(pickRange(undefined, undefined, "2026-10-26", 25)).toEqual({ from: "2026-10-25", to: "2026-10-26" });
+  });
+});

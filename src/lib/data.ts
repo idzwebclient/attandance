@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DEFAULT_TZ, isMonth, monthRange, todayIn } from "./format";
+import { DEFAULT_TZ, isMonth, periodOf, periodRange, todayIn } from "./format";
 import type { AttendanceDayReport, BoardRow, MonthlySummaryRow, Settings } from "./types";
 
 export async function getSettings(supabase: SupabaseClient): Promise<Settings> {
@@ -14,16 +14,18 @@ export async function getSettings(supabase: SupabaseClient): Promise<Settings> {
       max_location_accuracy_meters: 100,
       timezone: DEFAULT_TZ,
       work_days: [1, 2, 3, 4, 5],
+      cycle_start_day: 1,
     }
   );
 }
 
-export function currentMonth(tz: string) {
-  return todayIn(tz).slice(0, 7);
+// Current reporting period (see periodRange) in the company timezone.
+export function currentMonth(settings: Settings) {
+  return periodOf(todayIn(settings.timezone), settings.cycle_start_day);
 }
 
-export function pickMonth(value: unknown, tz: string) {
-  return typeof value === "string" && isMonth(value) ? value : currentMonth(tz);
+export function pickMonth(value: unknown, settings: Settings) {
+  return typeof value === "string" && isMonth(value) ? value : currentMonth(settings);
 }
 
 export async function getDayReports(
@@ -42,22 +44,22 @@ export async function getDayReports(
   return (data ?? []) as AttendanceDayReport[];
 }
 
-export async function getMonthReports(supabase: SupabaseClient, month: string, f: { employeeId?: string; branchId?: string } = {}) {
-  return getDayReports(supabase, { ...monthRange(month), ...f });
+export async function getMonthReports(
+  supabase: SupabaseClient,
+  month: string,
+  settings: Settings,
+  f: { employeeId?: string; branchId?: string } = {},
+) {
+  return getDayReports(supabase, { ...periodRange(month, settings.cycle_start_day), ...f });
 }
 
 export async function getMonthlySummary(
   supabase: SupabaseClient,
   month: string,
+  settings: Settings,
   f: { branchId?: string | null; employeeId?: string | null } = {},
 ) {
-  const { data, error } = await supabase.rpc("monthly_summary", {
-    p_month: `${month}-01`,
-    p_branch_id: f.branchId ?? null,
-    p_employee_id: f.employeeId ?? null,
-  });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as MonthlySummaryRow[];
+  return getRangeSummary(supabase, periodRange(month, settings.cycle_start_day), f);
 }
 
 // One row per active employee for a date: their attendance, or a `missing` row.

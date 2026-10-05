@@ -11,16 +11,16 @@ export const metadata: Metadata = { title: "Sejarah" };
 export default async function HistoryPage({ searchParams }: PageProps<"/history">) {
   const { supabase, profile } = await requireRole("staff", "manager");
   const settings = await getSettings(supabase);
-  const month = pickMonth((await searchParams).month, settings.timezone);
+  const month = pickMonth((await searchParams).month, settings);
   const [rows, [summary]] = await Promise.all([
-    getMonthReports(supabase, month, { employeeId: profile.id }),
-    getMonthlySummary(supabase, month, { employeeId: profile.id }),
+    getMonthReports(supabase, month, settings, { employeeId: profile.id }),
+    getMonthlySummary(supabase, month, settings, { employeeId: profile.id }),
   ]);
 
   return (
     <div className="space-y-4">
       <PageTitle title="Sejarah kehadiran" />
-      <MonthSwitcher month={month} current={currentMonth(settings.timezone)} href={(m) => `/history?month=${m}`} />
+      <MonthSwitcher month={month} startDay={settings.cycle_start_day} current={currentMonth(settings)} href={(m) => `/history?month=${m}`} />
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Hari hadir" value={summary.recorded_days} />

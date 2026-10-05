@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/auth";
 import {
   buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getMonthReports, getSettings, pickMonth,
 } from "@/lib/data";
-import { formatDate, formatMonth, isDate, todayIn } from "@/lib/format";
+import { formatDate, formatPeriod, isDate, todayIn } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Kehadiran" };
 
@@ -19,7 +19,7 @@ export default async function AdminAttendance({ searchParams }: PageProps<"/admi
   const today = todayIn(settings.timezone);
   const view = sp.view === "month" ? "month" : "day";
   const date = typeof sp.date === "string" && isDate(sp.date) ? sp.date : today;
-  const month = pickMonth(sp.month, settings.timezone);
+  const month = pickMonth(sp.month, settings);
   const branchId = typeof sp.branch === "string" && sp.branch ? sp.branch : undefined;
   const employeeId = typeof sp.employee === "string" && sp.employee ? sp.employee : undefined;
 
@@ -46,7 +46,7 @@ export default async function AdminAttendance({ searchParams }: PageProps<"/admi
       </>
     );
   } else {
-    const rows = await getMonthReports(supabase, month, { branchId, employeeId });
+    const rows = await getMonthReports(supabase, month, settings, { branchId, employeeId });
     content = (
       <AttendanceTable
         rows={rows}
@@ -62,7 +62,7 @@ export default async function AdminAttendance({ searchParams }: PageProps<"/admi
     <div>
       <PageTitle
         title="Kehadiran"
-        subtitle={view === "day" ? formatDate(date, { dateStyle: "full" }) : formatMonth(month)}
+        subtitle={view === "day" ? formatDate(date, { dateStyle: "full" }) : formatPeriod(month, settings.cycle_start_day)}
         actions={<Link href="/admin/attendance/new" className={buttonClass("secondary")}>Tambah / betulkan rekod</Link>}
       />
       <FilterBar>

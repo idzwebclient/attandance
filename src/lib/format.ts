@@ -147,22 +147,23 @@ export function addDays(date: string, days: number) {
 }
 
 // Quick ranges for report filters, relative to `today` in the company timezone.
-export function quickRanges(today: string) {
+// "Bulan ini" / "Bulan lepas" follow the reporting cycle (see periodRange).
+export function quickRanges(today: string, startDay = 1) {
   const dow = new Date(`${today}T00:00:00Z`).getUTCDay() || 7; // 1 = Monday
-  const monthStart = `${today.slice(0, 7)}-01`;
-  const lastMonthEnd = addDays(monthStart, -1);
+  const current = periodRange(periodOf(today, startDay), startDay);
+  const last = periodRange(periodOf(addDays(current.from, -1), startDay), startDay);
   return [
     { label: "Hari ini", from: today, to: today },
     { label: "Semalam", from: addDays(today, -1), to: addDays(today, -1) },
     { label: "Minggu ini", from: addDays(today, 1 - dow), to: today },
-    { label: "Bulan ini", from: monthStart, to: today },
-    { label: "Bulan lepas", from: `${lastMonthEnd.slice(0, 7)}-01`, to: lastMonthEnd },
+    { label: "Bulan ini", from: current.from, to: today },
+    { label: "Bulan lepas", from: last.from, to: last.to },
   ];
 }
 
-// Reads ?from=&to= with sane defaults (this month) and keeps from <= to.
-export function pickRange(from: unknown, to: unknown, today: string) {
-  let f = typeof from === "string" && isDate(from) ? from : `${today.slice(0, 7)}-01`;
+// Reads ?from=&to= with sane defaults (current period so far) and keeps from <= to.
+export function pickRange(from: unknown, to: unknown, today: string, startDay = 1) {
+  let f = typeof from === "string" && isDate(from) ? from : periodRange(periodOf(today, startDay), startDay).from;
   let t = typeof to === "string" && isDate(to) ? to : today;
   if (f > t) [f, t] = [t, f];
   return { from: f, to: t };
@@ -172,4 +173,29 @@ export function formatRange(from: string, to: string) {
   return from === to
     ? formatDate(from, { dateStyle: "full" })
     : `${formatDate(from, { day: "numeric", month: "short", year: "numeric" })} – ${formatDate(to, { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
+// Reporting periods. A period is named by the month it ends in: with a start
+// day of 25, "2026-10" runs 25 Sep – 24 Oct 2026. Start day 1 = calendar month.
+export function periodRange(month: string, startDay = 1) {
+  if (startDay <= 1) return monthRange(month);
+  const [y, m] = month.split("-").map(Number);
+  const prev = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return { from: `${prev}-${pad(startDay)}`, to: `${month}-${pad(startDay - 1)}` };
+}
+
+// The period a date falls in.
+export function periodOf(date: string, startDay = 1) {
+  const month = date.slice(0, 7);
+  if (startDay <= 1 || Number(date.slice(8, 10)) < startDay) return month;
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7);
+}
+
+export function formatPeriod(month: string, startDay = 1) {
+  if (startDay <= 1) return formatMonth(month);
+  const { from, to } = periodRange(month, startDay);
+  const short = (d: string) => formatDate(d, { day: "numeric", month: "short" });
+  return `${formatMonth(month)} (${short(from)} – ${short(to)})`;
 }

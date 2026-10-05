@@ -45,6 +45,16 @@ export default async function SettingsPage() {
               <input name="timezone" defaultValue={s.timezone} required className={inputClass} />
             </Field>
           </div>
+          <Field
+            label="Kitaran bulan bermula pada hari ke-"
+            hint="Contoh 25: setiap bulan dikira dari 25 hari bulan hingga 24 bulan berikutnya. Pilih 1 untuk bulan kalendar biasa."
+          >
+            <select name="cycle_start_day" defaultValue={s.cycle_start_day} className={inputClass}>
+              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>{d === 1 ? "1 (bulan kalendar)" : `${d} hingga ${d - 1} bulan berikutnya`}</option>
+              ))}
+            </select>
+          </Field>
           <fieldset>
             <legend className="mb-1 text-sm font-medium">Hari bekerja (untuk kiraan tidak hadir)</legend>
             <div className="flex flex-wrap gap-3">
