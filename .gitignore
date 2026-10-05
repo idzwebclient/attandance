@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Supabase CLI token (setup only)
+supabase-token.txt
+admin-login.txt
+supabase/.temp/

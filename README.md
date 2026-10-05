@@ -45,3 +45,8 @@ npm run dev     # app di http://localhost:3000
 insert into public.profiles (auth_user_id, full_name, employee_code, role)
 select id, 'Nama Admin', 'A001', 'admin' from auth.users where email = 'admin@contoh.com';
 ```
+
+### Skrip
+
+- `node --env-file=.env.local scripts/create-admin.mjs <emel> "<nama>" <kod>`: cipta akaun admin (kata laluan sementara disimpan dalam `admin-login.txt`).
+- `SUPABASE_ACCESS_TOKEN=... node --env-file=.env.local scripts/smoke-test.mjs`: semakan hujung ke hujung pada projek Supabase sebenar; data ujian dipadam selepas itu.
