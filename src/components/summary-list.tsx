@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { minutes } from "@/lib/format";
 import type { MonthlySummaryRow } from "@/lib/types";
-import { Empty } from "./ui";
+import { Empty, inputClass } from "./ui";
 
 // "3 kali · 45m" style cell; quiet when zero.
 function Count({ n, mins, bad = true }: { n: number; mins?: number; bad?: boolean }) {
@@ -25,22 +28,33 @@ const COLS = [
 
 // Per-employee summary: a short table on desktop, cards on phones.
 export function SummaryList({
-  rows,
+  rows: all,
   showBranch,
-  employeeHref,
+  hrefBase,
 }: {
   rows: MonthlySummaryRow[];
   showBranch?: boolean;
-  employeeHref?: (row: MonthlySummaryRow) => string;
+  /** Employee link prefix, e.g. "/admin/employees/". */
+  hrefBase?: string;
 }) {
-  if (!rows.length) return <Empty>Tiada pekerja untuk dipaparkan.</Empty>;
+  const [q, setQ] = useState("");
+  if (!all.length) return <Empty>Tiada pekerja untuk dipaparkan.</Empty>;
+  const needle = q.trim().toLowerCase();
+  const rows = needle
+    ? all.filter((r) => `${r.full_name} ${r.employee_code} ${r.branch_name ?? ""}`.toLowerCase().includes(needle))
+    : all;
   const name = (r: MonthlySummaryRow) =>
-    employeeHref ? <Link href={employeeHref(r)} className="font-medium text-brand hover:underline">{r.full_name}</Link>
+    hrefBase ? <Link href={`${hrefBase}${r.employee_id}`} className="font-medium text-brand hover:underline">{r.full_name}</Link>
       : <span className="font-medium">{r.full_name}</span>;
   const sub = (r: MonthlySummaryRow) => [r.employee_code, showBranch && r.branch_name].filter(Boolean).join(" · ");
 
   return (
     <>
+      {all.length > 5 && (
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Cari nama atau no. pekerja…" className={`${inputClass} no-print`} />
+      )}
+      {!rows.length && <Empty>Tiada padanan.</Empty>}
       <ul className="space-y-2 sm:hidden">
         {rows.map((r) => (
           <li key={r.employee_id} className="rounded-2xl border border-border bg-surface p-3 shadow-sm">
@@ -60,8 +74,9 @@ export function SummaryList({
         ))}
       </ul>
       <div className="hidden overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm sm:block">
-        <table className="w-full text-sm">
-          <thead className="bg-neutral-bg text-left text-muted">
+        <table className="w-full table-fixed text-sm">
+          <colgroup><col className="w-64" />{COLS.map((c) => <col key={c.label} />)}</colgroup>
+          <thead className="bg-neutral-bg text-left text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="px-4 py-3 font-medium">Pekerja</th>
               {COLS.map((c) => <th key={c.label} className="px-4 py-3 text-center font-medium">{c.label}</th>)}

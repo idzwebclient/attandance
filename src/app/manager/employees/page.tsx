@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ListSearch } from "@/components/list-search";
 import { Badge, Card, Empty, PageTitle, Table } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import type { Profile } from "@/lib/types";
@@ -14,13 +15,14 @@ export default async function ManagerEmployees() {
   return (
     <div>
       <PageTitle title="Pekerja" subtitle={`${branch?.name} · ${people.length} orang`} />
+      {people.length > 5 && <div className="mb-3"><ListSearch scope="branch-people" /></div>}
       {people.length ? (
-        <Card className="!p-0">
+        <Card className="!p-0" id="branch-people">
           <Table>
             <thead><tr><th>Nama</th><th>No. pekerja</th><th>Peranan</th><th>Status</th><th /></tr></thead>
             <tbody>
               {people.map((p) => (
-                <tr key={p.id} className={p.is_active ? "" : "opacity-60"}>
+                <tr key={p.id} className={p.is_active ? "" : "opacity-60"} data-search={`${p.full_name} ${p.employee_code}`}>
                   <td className="font-medium">{p.full_name}</td>
                   <td>{p.employee_code}</td>
                   <td>{p.role === "manager" ? "Manager" : "Staf"}</td>

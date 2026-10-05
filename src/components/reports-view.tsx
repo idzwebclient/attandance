@@ -125,7 +125,7 @@ export async function ReportsView({
       </div>
 
       {tab === "summary" ? (
-        <SummaryList rows={summary} showBranch={!branchId} employeeHref={(r) => employeeHref(r.employee_id)} />
+        <SummaryList rows={summary} showBranch={!branchId} hrefBase={employeeHref("")} />
       ) : (
         <AttendanceTable
           rows={dayRows}

@@ -92,7 +92,7 @@ export function minutes(n: number | null | undefined) {
   if (n === 0) return "0";
   const h = Math.floor(n / 60);
   const m = n % 60;
-  return h ? `${h}j ${m}m` : `${m}m`;
+  return h ? (m ? `${h}j ${m}m` : `${h}j`) : `${m}m`;
 }
 
 export function isMonth(v: string | undefined): v is string {

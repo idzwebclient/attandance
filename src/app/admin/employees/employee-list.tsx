@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/form-state";
+import { ListSearch } from "@/components/list-search";
 import { Badge, Card, Empty, Field, PageTitle, Table, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getBranchNames } from "@/lib/data";
@@ -40,14 +41,17 @@ export async function EmployeeList({ roles, title, defaultRole }: { roles: Role[
         </div>
       </details>
       {profiles?.length ? (
-        <Card className="!p-0">
+        <>
+        {profiles.length > 5 && <ListSearch scope="employee-list" />}
+        <Card className="!p-0" id="employee-list">
           <Table>
             <thead>
               <tr><th>Nama</th><th>No. pekerja</th><th>Emel</th><th>Peranan</th><th>Cawangan</th><th>Status</th><th /></tr>
             </thead>
             <tbody>
               {(profiles as Profile[]).map((p) => (
-                <tr key={p.id} className={p.is_active ? "" : "opacity-60"}>
+                <tr key={p.id} className={p.is_active ? "" : "opacity-60"}
+                  data-search={`${p.full_name} ${p.employee_code} ${emails.get(p.auth_user_id) ?? ""} ${(p.branch_id && branchNames.get(p.branch_id)) || ""}`}>
                   <td className="font-medium whitespace-nowrap">{p.full_name}</td>
                   <td>{p.employee_code}</td>
                   <td className="break-all">{emails.get(p.auth_user_id) ?? "—"}</td>
@@ -60,6 +64,7 @@ export async function EmployeeList({ roles, title, defaultRole }: { roles: Role[
             </tbody>
           </Table>
         </Card>
+        </>
       ) : (
         <Empty>Belum ada akaun.</Empty>
       )}
