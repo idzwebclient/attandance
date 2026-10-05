@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Profile } from "@/lib/types";
+import { Credit } from "./credit";
 import { NavLinks, type NavItem } from "./nav-links";
 
 const ROLE_LABEL = { staff: "Staf", manager: "Manager", admin: "Admin" } as const;
@@ -42,7 +43,10 @@ export function AppShell({
           </nav>
         )}
       </header>
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 py-5 ${bottomNav ? "pb-28" : ""}`}>{children}</main>
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 ${bottomNav ? "pb-24" : "pb-2"}`}>
+        {children}
+        <Credit className="mt-6" />
+      </main>
       {bottomNav && (
         <nav className="no-print fixed inset-x-0 bottom-0 z-10 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]">
           <NavLinks items={nav} variant="bottom" />

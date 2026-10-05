@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Credit } from "@/components/credit";
 import { Card } from "@/components/ui";
 import { LoginForm } from "./login-form";
 
@@ -26,6 +27,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             notice={typeof error === "string" ? NOTICES[error] : undefined}
           />
         </Card>
+        <Credit className="mt-4" />
       </div>
     </main>
   );
