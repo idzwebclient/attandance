@@ -9,17 +9,19 @@ export const getSession = cache(async () => {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
   if (!userId) return { supabase, profile: null, email: null, branch: null };
-  const { data: profile } = await supabase
+  // One round trip for the profile and its branch.
+  const { data } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, branch:branches(*)")
     .eq("auth_user_id", userId)
-    .maybeSingle<Profile>();
-  let branch: Branch | null = null;
-  if (profile?.branch_id) {
-    const { data } = await supabase.from("branches").select("*").eq("id", profile.branch_id).maybeSingle<Branch>();
-    branch = data;
-  }
-  return { supabase, profile, email: (claims?.claims?.email as string | undefined) ?? null, branch };
+    .maybeSingle<Profile & { branch: Branch | null }>();
+  const { branch = null, ...profile } = data ?? {};
+  return {
+    supabase,
+    profile: data ? (profile as Profile) : null,
+    email: (claims?.claims?.email as string | undefined) ?? null,
+    branch,
+  };
 });
 
 export function homeFor(role: Role) {
