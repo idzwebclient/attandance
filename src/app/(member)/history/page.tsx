@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { AttendanceTable } from "@/components/attendance-table";
-import { FilterBar, FilterField, MonthInput } from "@/components/filters";
+import { MonthSwitcher } from "@/components/month-switcher";
 import { Card, PageTitle } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getMonthlySummary, getMonthReports, getSettings, pickMonth } from "@/lib/data";
-import { formatMonth, minutes } from "@/lib/format";
+import { currentMonth, getMonthlySummary, getMonthReports, getSettings, pickMonth } from "@/lib/data";
+import { minutes } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Sejarah" };
 
@@ -19,10 +19,8 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
 
   return (
     <div className="space-y-4">
-      <PageTitle title="Sejarah kehadiran" subtitle={formatMonth(month)} />
-      <FilterBar>
-        <FilterField label="Bulan"><MonthInput value={month} /></FilterField>
-      </FilterBar>
+      <PageTitle title="Sejarah kehadiran" />
+      <MonthSwitcher month={month} current={currentMonth(settings.timezone)} href={(m) => `/history?month=${m}`} />
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Hari hadir" value={summary.recorded_days} />

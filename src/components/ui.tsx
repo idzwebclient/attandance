@@ -40,7 +40,7 @@ const BUTTON = {
 };
 
 export function buttonClass(variant: keyof typeof BUTTON = "primary", extra = "") {
-  return `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 ${BUTTON[variant]} ${extra}`;
+  return `inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 ${BUTTON[variant]} ${extra}`;
 }
 
 export function Button({
@@ -52,7 +52,7 @@ export function Button({
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-base sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+  "w-full min-h-11 rounded-xl border border-border bg-surface px-3 py-2 text-base sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (

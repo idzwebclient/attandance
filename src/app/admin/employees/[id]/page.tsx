@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AttendanceTable } from "@/components/attendance-table";
-import { FilterBar, FilterField, MonthInput } from "@/components/filters";
+import { MonthSwitcher } from "@/components/month-switcher";
 import { ActionForm } from "@/components/form-state";
 import { MonthlySummaryTable } from "@/components/monthly-summary-table";
 import { Badge, Button, Card, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getBranchNames, getMonthlySummary, getMonthReports, getSettings, pickMonth } from "@/lib/data";
+import { getBranchNames, getMonthlySummary, getMonthReports, getSettings, pickMonth, currentMonth } from "@/lib/data";
 import { formatMonth } from "@/lib/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/lib/types";
@@ -69,7 +69,7 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
       {p.role !== "admin" && (
         <section className="space-y-3">
           <h2 className="font-medium">Kehadiran · {formatMonth(month)}</h2>
-          <FilterBar><FilterField label="Bulan"><MonthInput value={month} /></FilterField></FilterBar>
+          <MonthSwitcher month={month} current={currentMonth(settings.timezone)} href={(m) => `/admin/employees/${p.id}?month=${m}`} />
           <MonthlySummaryTable rows={summary} />
           <AttendanceTable rows={rows} tz={settings.timezone} show={{ date: true }} dayHref={(r) => `/admin/attendance/${r.id}`} />
         </section>

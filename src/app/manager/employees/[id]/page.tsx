@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AttendanceTable } from "@/components/attendance-table";
-import { FilterBar, FilterField, MonthInput } from "@/components/filters";
+import { MonthSwitcher } from "@/components/month-switcher";
 import { MonthlySummaryTable } from "@/components/monthly-summary-table";
 import { PageTitle } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getMonthlySummary, getMonthReports, getSettings, pickMonth } from "@/lib/data";
+import { currentMonth, getMonthlySummary, getMonthReports, getSettings, pickMonth } from "@/lib/data";
 import { formatMonth } from "@/lib/format";
 import type { Profile } from "@/lib/types";
 
@@ -26,7 +26,7 @@ export default async function ManagerEmployee({ params, searchParams }: PageProp
   return (
     <div className="space-y-4">
       <PageTitle title={p.full_name} subtitle={`${p.employee_code} · ${formatMonth(month)}`} />
-      <FilterBar><FilterField label="Bulan"><MonthInput value={month} /></FilterField></FilterBar>
+      <MonthSwitcher month={month} current={currentMonth(settings.timezone)} href={(m) => `/manager/employees/${p.id}?month=${m}`} />
       <MonthlySummaryTable rows={summary} />
       <AttendanceTable rows={rows} tz={settings.timezone} show={{ date: true }} />
     </div>
