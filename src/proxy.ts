@@ -22,8 +22,10 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
+  // getSession reads the cookie and only calls Supabase when the token needs
+  // refreshing. Pages still verify the user with getClaims (requireRole).
+  const { data } = await supabase.auth.getSession();
+  const signedIn = Boolean(data.session);
   const { pathname, search } = request.nextUrl;
 
   if (!signedIn && pathname !== "/login") {

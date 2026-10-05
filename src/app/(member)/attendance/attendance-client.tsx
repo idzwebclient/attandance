@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScannerView } from "@/components/qr-scanner";
 import { Badge, Button, Card, Notice } from "@/components/ui";
@@ -18,14 +18,14 @@ import {
   formatTime,
   minutes,
 } from "@/lib/format";
-import { getCurrentPosition, LocationError, type Position } from "@/lib/geolocation";
+import { clearPosition, getFreshPosition, LocationError, warmUpPosition, type Position } from "@/lib/geolocation";
 import { createClient } from "@/lib/supabase/client";
 import type { AttendanceContext, AttendanceDay, EventType, SubmitResult } from "@/lib/types";
 
 type Phase =
   | { kind: "idle" }
   | { kind: "busy"; label: string }
-  | { kind: "scan"; event: EventType; position: Position }
+  | { kind: "scan"; event: EventType; position: Promise<Position | null> }
   | { kind: "done"; result: Extract<SubmitResult, { ok: true }> }
   | { kind: "error"; message: string };
 
@@ -55,8 +55,25 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
     router.refresh();
   }, [router]);
 
+  useEffect(() => {
+    warmUpPosition();
+  }, []);
+
+  // Resolves to null (with the error shown) when no location can be read.
+  const locate = useCallback(async (): Promise<Position | null> => {
+    try {
+      return await getFreshPosition();
+    } catch (e) {
+      setPhase({ kind: "error", message: e instanceof LocationError ? e.message : "Lokasi tidak dapat diperoleh." });
+      return null;
+    }
+  }, []);
+
   const submit = useCallback(
-    async (event: EventType, position: Position, qr: string | null) => {
+    async (event: EventType, positionPromise: Promise<Position | null>, qr: string | null) => {
+      setPhase({ kind: "busy", label: "Mendapatkan lokasi…" });
+      const position = await positionPromise;
+      if (!position) return;
       setPhase({ kind: "busy", label: "Merekod kehadiran…" });
       const { data, error } = await createClient().rpc("submit_attendance", {
         p_latitude: position.latitude,
@@ -71,13 +88,14 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         return;
       }
       const result = data as SubmitResult;
+      if (result.ok || result.code !== "QR_REQUIRED") clearPosition();
       if (result.ok) {
         setPendingQr(null);
         setPhase({ kind: "done", result });
         await refresh();
       } else if (result.code === "QR_REQUIRED") {
-        // Location changed since the check (now inside the branch): scan and retry.
-        setPhase({ kind: "scan", event, position });
+        // Inside the branch: the server wants the QR. Scan and retry.
+        setPhase({ kind: "scan", event, position: Promise.resolve(position) });
       } else {
         setPhase({ kind: "error", message: result.message });
         if (result.code === "INVALID_QR" || result.code === "QR_WRONG_BRANCH") setPendingQr(null);
@@ -88,49 +106,20 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
   );
 
   const start = useCallback(
-    async (event: EventType) => {
-      setPhase({ kind: "busy", label: "Mendapatkan lokasi…" });
-      let position: Position;
-      try {
-        position = await getCurrentPosition();
-      } catch (e) {
-        setPhase({ kind: "error", message: e instanceof LocationError ? e.message : "Lokasi tidak dapat diperoleh." });
-        return;
-      }
-
-      setPhase({ kind: "busy", label: "Menyemak lokasi…" });
-      const { data, error } = await createClient().rpc("get_attendance_context", {
-        p_latitude: position.latitude,
-        p_longitude: position.longitude,
-      });
-      if (error || !data) {
-        setPhase({ kind: "error", message: networkMessage() });
-        return;
-      }
-      const check = data as AttendanceContext;
-      if (!check.ok) {
-        setPhase({ kind: "error", message: check.message });
-        return;
-      }
-      setCtx(check);
-      const isWork = event === "WORK_IN" || event === "WORK_OUT";
-      if (isWork && check.within_radius === false) {
-        setPhase({
-          kind: "error",
-          message: `Anda berada ${Math.round(check.distance_meters ?? 0)} m dari cawangan, di luar kawasan yang dibenarkan.`,
-        });
-        return;
-      }
-      const needsQr = check.qr_required?.[event] ?? true;
-      if (!needsQr) {
-        await submit(event, position, null);
-      } else if (pendingQr) {
-        await submit(event, position, pendingQr);
-      } else {
+    (event: EventType) => {
+      // GPS and camera run at the same time; the server decides everything else.
+      const position = locate();
+      if (pendingQr) {
+        submit(event, position, pendingQr);
+      } else if (event === "WORK_IN" || event === "WORK_OUT") {
+        // QR is always required to start or end work: open the camera right away.
         setPhase({ kind: "scan", event, position });
+      } else {
+        // Breaks need QR only inside the branch; the server answers QR_REQUIRED if so.
+        submit(event, position, null);
       }
     },
-    [pendingQr, submit],
+    [locate, pendingQr, submit],
   );
 
   if (!ctx.ok) {
