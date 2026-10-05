@@ -274,3 +274,34 @@ describe("attendance context", () => {
     expect(await ctx("04:00:00", NEAR)).toMatchObject({ within_radius: true, qr_required: { BREAK_OUT: true, WORK_OUT: true } });
   });
 });
+
+describe("monthly summary", () => {
+  it("aggregates a month and counts absences on work days only", async () => {
+    // Created before September so every work day counts.
+    await db.query("update profiles set created_at = '2026-08-01'");
+    await db.query("insert into public_holidays values ('2026-09-16', 'Hari Malaysia')");
+    // Tue 1 Sep: late 10 min, 75 min break, left 30 min early.
+    await punch(db, staff.authId, { at: at("01:10:00", "2026-09-01"), ...NEAR, qr: hq.qr_identifier });
+    await punch(db, staff.authId, { at: at("04:00:00", "2026-09-01"), ...NEAR, qr: hq.qr_identifier, intent: "BREAK_OUT" });
+    await punch(db, staff.authId, { at: at("05:15:00", "2026-09-01"), ...NEAR, qr: hq.qr_identifier });
+    await punch(db, staff.authId, { at: at("09:30:00", "2026-09-01"), ...NEAR, qr: hq.qr_identifier });
+    // Wed 2 Sep: early, never clocked out.
+    await punch(db, staff.authId, { at: at("00:50:00", "2026-09-02"), ...NEAR, qr: hq.qr_identifier });
+
+    const { rows } = await db.query<Record<string, unknown>>(
+      "select * from monthly_summary('2026-09-01') where employee_code = 'S001'");
+    // September 2026 has 22 weekdays; minus Hari Malaysia = 21; minus 2 attended = 19.
+    expect(rows[0]).toMatchObject({
+      recorded_days: 2, early_arrivals: 1, late_arrivals: 1, total_late_minutes: 10,
+      excess_breaks: 1, total_excess_break_minutes: 15, early_departures: 1,
+      total_early_departure_minutes: 30, completed_days: 1, incomplete_days: 1, absent_days: 19,
+      branch_name: "HQ",
+    });
+  });
+
+  it("respects RLS for managers", async () => {
+    const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: other.id });
+    const rows = await asUser<{ employee_code: string }>(db, mgr.authId, "select employee_code from monthly_summary('2026-09-01')");
+    expect(rows.map((r) => r.employee_code)).toEqual(["M001"]);
+  });
+});
