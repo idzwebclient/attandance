@@ -37,10 +37,15 @@ const STEPS: { event: EventType; field: keyof AttendanceDay }[] = [
   { event: "WORK_OUT", field: "work_out_at" },
 ];
 
-function networkMessage() {
-  return typeof navigator !== "undefined" && !navigator.onLine
-    ? "Tiada sambungan internet. Kehadiran tidak direkodkan."
-    : "Pelayan tidak dapat dihubungi. Kehadiran tidak direkodkan. Cuba lagi.";
+// Tells "no internet" apart from the server refusing or failing the request.
+function networkMessage(error?: { code?: string; message?: string } | null) {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return "Tiada sambungan internet. Kehadiran tidak direkodkan.";
+  }
+  if (error?.code && !/fetch|network/i.test(error.message ?? "")) {
+    return `Ralat sistem semasa merekod (kod ${error.code}). Kehadiran tidak direkodkan. Sila maklumkan admin.`;
+  }
+  return "Pelayan tidak dapat dihubungi. Kehadiran tidak direkodkan. Cuba lagi.";
 }
 
 export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceContext; scannedQr: string | null }) {
@@ -85,7 +90,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         p_client_time: new Date().toISOString(),
       });
       if (error || !data) {
-        setPhase({ kind: "error", message: networkMessage() });
+        setPhase({ kind: "error", message: networkMessage(error) });
         return;
       }
       const result = data as SubmitResult;

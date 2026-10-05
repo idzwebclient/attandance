@@ -320,3 +320,20 @@ describe("range summary", () => {
     expect(both.rows[0]).toMatchObject({ recorded_days: 2, late_arrivals: 2, total_late_minutes: 30, absent_days: 2 });
   });
 });
+
+describe("punching after an admin correction", () => {
+  it("lets staff punch a stage the admin cleared", async () => {
+    const admin = await createUser(db, { name: "Admin", code: "A001", role: "admin" });
+    await punch(db, staff.authId, { at: at("01:00:00"), ...NEAR, qr: hq.qr_identifier });
+    await punch(db, staff.authId, { at: at("02:00:00"), ...NEAR, qr: hq.qr_identifier, intent: "WORK_OUT" });
+    // Admin removes the mistaken early clock-out.
+    await asUser(db, admin.authId,
+      "select public.admin_correct_attendance($1, '2026-10-05', $2, null, null, null, 'Tersilap tekan')",
+      [staff.profileId, at("01:00:00")]);
+    const again = await punch(db, staff.authId, { at: at("10:05:00"), ...NEAR, qr: hq.qr_identifier, intent: "WORK_OUT" });
+    expect(again).toMatchObject({ ok: true, event_type: "WORK_OUT" });
+    expect(again.day).toMatchObject({ departure_status: "COMPLETE", completion_status: "COMPLETED" });
+    const { rows } = await db.query<{ n: number }>("select count(*)::int n from attendance_events where event_type = 'WORK_OUT'");
+    expect(rows[0].n).toBe(2);
+  });
+});
