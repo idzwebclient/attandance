@@ -59,10 +59,18 @@ export default async function DayDetail({ params, searchParams }: PageProps<"/ad
                 <tr key={e.id}>
                   <td className="whitespace-nowrap">{EVENT_LABEL[e.event_type]}</td>
                   <td className="tabular-nums">{formatTime(e.recorded_at, tz)}</td>
-                  <td>{e.is_remote_break ? <Badge tone="info">Rehat luar (lokasi)</Badge> : <Badge>QR + lokasi</Badge>}</td>
+                  <td>
+                    {e.verification_mode === "FIELD_LOCATION_ONLY" ? <Badge tone="info">Kerja luar (lokasi)</Badge>
+                      : e.is_remote_break ? <Badge tone="info">Rehat luar (lokasi)</Badge> : <Badge>QR + lokasi</Badge>}
+                  </td>
                   <td className="tabular-nums">{Math.round(e.distance_from_branch_meters)} m</td>
                   <td className="tabular-nums">{e.location_accuracy_meters != null ? `±${Math.round(e.location_accuracy_meters)} m` : "—"}</td>
-                  <td className="font-mono text-xs">{e.latitude.toFixed(5)}, {e.longitude.toFixed(5)}</td>
+                  <td className="font-mono text-xs">
+                    <a className="text-brand hover:underline" target="_blank" rel="noreferrer"
+                      href={`https://www.google.com/maps?q=${e.latitude},${e.longitude}`}>
+                      {e.latitude.toFixed(5)}, {e.longitude.toFixed(5)}
+                    </a>
+                  </td>
                   <td className="font-mono text-xs">{e.qr_identifier_reference ? `${e.qr_identifier_reference.slice(0, 8)}…` : "—"}</td>
                 </tr>
               ))}

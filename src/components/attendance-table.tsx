@@ -52,6 +52,7 @@ export function AttendanceTable({
     if (r.work_out_at && r.early_departure_minutes > 0) notes.push({ label: `Balik awal ${minutes(r.early_departure_minutes)}`, tone: "bad" });
     if (r.early_arrival_minutes > 0) notes.push({ label: `Awal ${minutes(r.early_arrival_minutes)}`, tone: "good" });
     if (r.break_status === "NO_BREAK") notes.push({ label: "Tiada rehat", tone: "neutral" });
+    if (r.is_field_work) notes.push({ label: "Kerja luar", tone: "info" });
     if (r.extra_open) notes.push({ label: "Kerja tambahan sedang berjalan", tone: "info" });
     else if (r.extra_minutes > 0) notes.push({ label: `Tambahan ${minutes(r.extra_minutes)}`, tone: "info" });
 

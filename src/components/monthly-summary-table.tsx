@@ -16,6 +16,7 @@ export const SUMMARY_COLUMNS: { key: keyof MonthlySummaryRow; label: string; min
   { key: "total_excess_break_minutes", label: "Jumlah lebih rehat", minutes: true, bad: true },
   { key: "early_departures", label: "Balik awal", bad: true },
   { key: "total_early_departure_minutes", label: "Jumlah balik awal", minutes: true, bad: true },
+  { key: "field_work_days", label: "Kerja luar (hari)" },
   { key: "extra_sessions", label: "Kerja tambahan (kali)" },
   { key: "total_extra_minutes", label: "Jumlah kerja tambahan", minutes: true },
 ];

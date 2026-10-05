@@ -117,6 +117,9 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
       const position = locate();
       if (pendingQr) {
         submit(event, position, pendingQr);
+      } else if (ctx.ok && ctx.field_work) {
+        // Approved field work: the server only asks for QR when we are at the branch.
+        submit(event, position, null);
       } else if (event !== "BREAK_OUT" && event !== "BREAK_IN") {
         // QR is always required to start or end work (or extra work): open the camera right away.
         setPhase({ kind: "scan", event, position });
@@ -125,7 +128,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         submit(event, position, null);
       }
     },
-    [locate, pendingQr, submit],
+    [ctx, locate, pendingQr, submit],
   );
 
   if (!ctx.ok) {
@@ -158,6 +161,17 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         </p>
       </div>
 
+      {ctx.field_work && (
+        <div className="flex gap-3 rounded-2xl border border-info/30 bg-info-bg p-4 text-sm text-info">
+          <Icon name="pin" className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold">Hari ini: kerja luar</p>
+            <p>Anda boleh punch di luar kedai tanpa imbas QR. Lokasi anda tetap direkod.</p>
+            {ctx.field_work_note && <p className="mt-1 opacity-80">{ctx.field_work_note}</p>}
+          </div>
+        </div>
+      )}
+
       <Card className="space-y-4 !p-5">
         {phase.kind === "done" ? (
           <div className="space-y-2 py-2 text-center">
@@ -167,6 +181,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
             <p className="text-lg font-semibold">{EVENT_LABEL[phase.result.event_type]} berjaya</p>
             <p className="text-4xl font-bold tabular-nums">{formatTime(phase.result.recorded_at, ctx.timezone)}</p>
             {phase.result.is_remote_break && <Badge tone="info">Rehat di luar cawangan</Badge>}
+            {phase.result.is_field_work && <Badge tone="info">Kerja luar</Badge>}
             <ResultStatus result={phase.result} />
             <Button variant="secondary" className="mt-2 w-full py-3" onClick={() => setPhase({ kind: "idle" })}>
               OK
@@ -251,7 +266,9 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
             <p className="text-center text-xs text-muted">
               {pendingQr
                 ? "Kod QR sudah diimbas. Tekan butang di atas."
-                : "Tekan butang, kemudian imbas kod QR di kedai jika diminta."}
+                : ctx.field_work
+                  ? "Tekan butang. Lokasi anda akan direkod."
+                  : "Tekan butang, kemudian imbas kod QR di kedai jika diminta."}
             </p>
           </div>
         )}

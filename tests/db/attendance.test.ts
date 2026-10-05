@@ -386,3 +386,56 @@ describe("extra sessions after clocking out", () => {
     await expect(asUser(db, staff.authId, "update attendance_extra_sessions set minutes = 999")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("field work (kerja luar)", () => {
+  const grant = (authId: string, employeeId: string, from = "2026-10-05", to = "2026-10-05") =>
+    asUser<{ r: { ok: boolean; code?: string; days?: number } }>(db, authId,
+      "select public.grant_field_work($1, $2, $3, 'Pasang barang di Sungai Petani') as r", [employeeId, from, to]);
+
+  it("lets staff punch away from the branch without QR on an approved day", async () => {
+    const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
+    expect((await punch(db, staff.authId, { at: at("01:00:00"), ...FAR })).code).toBe("OUTSIDE_RADIUS");
+
+    expect((await grant(mgr.authId, staff.profileId, "2026-10-05", "2026-10-06"))[0].r).toMatchObject({ ok: true, days: 2 });
+    const ctx = (await db.query<{ r: Record<string, unknown> }>(
+      "select app.attendance_context_at($1, $2, 3.149, 101.6869) r", [staff.authId, at("01:00:00")])).rows[0].r;
+    expect(ctx).toMatchObject({ field_work: true, qr_required: { WORK_IN: false }, field_work_note: "Pasang barang di Sungai Petani" });
+
+    const r = await punch(db, staff.authId, { at: at("01:00:00"), ...FAR });
+    expect(r).toMatchObject({ ok: true, event_type: "WORK_IN", is_field_work: true });
+    expect(r.day).toMatchObject({ is_field_work: true, arrival_status: "ON_TIME" });
+    const ev = await db.query("select verification_mode, qr_identifier_reference, is_remote_break from attendance_events");
+    expect(ev.rows[0]).toEqual({ verification_mode: "FIELD_LOCATION_ONLY", qr_identifier_reference: null, is_remote_break: false });
+
+    // Back at the branch the normal QR rule applies.
+    expect((await punch(db, staff.authId, { at: at("10:00:00"), ...NEAR, intent: "WORK_OUT" })).code).toBe("QR_REQUIRED");
+
+    const sum = await db.query<{ field_work_days: number }>(
+      "select field_work_days from attendance_summary('2026-10-01', '2026-10-31') where employee_code = 'S001'");
+    expect(sum.rows[0].field_work_days).toBe(1);
+  });
+
+  it("only applies on the approved dates", async () => {
+    const admin = await createUser(db, { name: "Admin", code: "A001", role: "admin" });
+    await grant(admin.authId, staff.profileId, "2026-10-06", "2026-10-06");
+    expect((await punch(db, staff.authId, { at: at("01:00:00"), ...FAR })).code).toBe("OUTSIDE_RADIUS");
+  });
+
+  it("can be granted only by an admin or the employee's own manager", async () => {
+    const otherMgr = await createUser(db, { name: "Mgr2", code: "M002", role: "manager", branchId: other.id });
+    expect((await grant(staff.authId, staff.profileId))[0].r.code).toBe("FORBIDDEN");
+    expect((await grant(otherMgr.authId, staff.profileId))[0].r.code).toBe("FORBIDDEN");
+    await expect(asUser(db, staff.authId,
+      "insert into field_work_permits (employee_id, work_date) values ($1, '2026-10-05')", [staff.profileId]))
+      .rejects.toThrow(/permission denied/);
+  });
+
+  it("can be cancelled", async () => {
+    const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
+    await grant(mgr.authId, staff.profileId);
+    const { rows } = await db.query<{ id: string }>("select id from field_work_permits");
+    const res = await asUser<{ r: { ok: boolean } }>(db, mgr.authId, "select public.revoke_field_work($1) r", [rows[0].id]);
+    expect(res[0].r.ok).toBe(true);
+    expect((await punch(db, staff.authId, { at: at("01:00:00"), ...FAR })).code).toBe("OUTSIDE_RADIUS");
+  });
+});

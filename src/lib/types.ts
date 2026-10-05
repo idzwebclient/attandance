@@ -55,6 +55,7 @@ export type AttendanceDay = {
   completion_status: CompletionStatus;
   extra_minutes: number;
   extra_open: boolean;
+  is_field_work: boolean;
 };
 
 export type AttendanceDayReport = AttendanceDay & {
@@ -95,6 +96,7 @@ export type MonthlySummaryRow = {
   absent_days: number;
   extra_sessions: number;
   total_extra_minutes: number;
+  field_work_days: number;
 };
 
 export type AttendanceContext =
@@ -111,6 +113,8 @@ export type AttendanceContext =
       distance_meters: number | null;
       within_radius: boolean | null;
       qr_required: Partial<Record<EventType, boolean>> | null;
+      field_work: boolean;
+      field_work_note: string | null;
     }
   | Failure;
 
@@ -122,6 +126,7 @@ export type SubmitResult =
       event_type: EventType;
       recorded_at: string;
       is_remote_break: boolean;
+      is_field_work?: boolean;
       distance_meters: number;
       day: AttendanceDay;
     }
