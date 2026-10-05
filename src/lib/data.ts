@@ -130,3 +130,18 @@ export async function getBranchNames(supabase: SupabaseClient) {
   const { data } = await supabase.from("branches").select("id, name").order("name");
   return new Map((data ?? []).map((b) => [b.id as string, b.name as string]));
 }
+
+export async function getRangeSummary(
+  supabase: SupabaseClient,
+  range: { from: string; to: string },
+  f: { branchId?: string | null; employeeId?: string | null } = {},
+) {
+  const { data, error } = await supabase.rpc("attendance_summary", {
+    p_from: range.from,
+    p_to: range.to,
+    p_branch_id: f.branchId ?? null,
+    p_employee_id: f.employeeId ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MonthlySummaryRow[];
+}

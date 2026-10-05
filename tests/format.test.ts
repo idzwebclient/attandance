@@ -33,3 +33,16 @@ describe("timezone offsets", () => {
     expect(tzOffset("2026-07-01", "Europe/London")).toBe("+01:00");
   });
 });
+
+describe("date ranges", () => {
+  it("builds quick ranges from a Monday-based week", async () => {
+    const { quickRanges, pickRange } = await import("@/lib/format");
+    const r = Object.fromEntries(quickRanges("2026-10-07").map((q) => [q.label, [q.from, q.to]]));
+    expect(r["Minggu ini"]).toEqual(["2026-10-05", "2026-10-07"]);
+    expect(r["Semalam"]).toEqual(["2026-10-06", "2026-10-06"]);
+    expect(r["Bulan lepas"]).toEqual(["2026-09-01", "2026-09-30"]);
+    expect(quickRanges("2026-10-04").find((q) => q.label === "Minggu ini")?.from).toBe("2026-09-28");
+    expect(pickRange("2026-10-10", "2026-10-01", "2026-10-15")).toEqual({ from: "2026-10-01", to: "2026-10-10" });
+    expect(pickRange(undefined, undefined, "2026-10-15")).toEqual({ from: "2026-10-01", to: "2026-10-15" });
+  });
+});

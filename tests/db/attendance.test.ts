@@ -305,3 +305,18 @@ describe("monthly summary", () => {
     expect(rows.map((r) => r.employee_code)).toEqual(["M001"]);
   });
 });
+
+describe("range summary", () => {
+  it("summarises any date range", async () => {
+    await db.query("update profiles set created_at = '2026-08-01'");
+    await punch(db, staff.authId, { at: at("01:10:00", "2026-09-01"), ...NEAR, qr: hq.qr_identifier });
+    await punch(db, staff.authId, { at: at("01:20:00", "2026-09-03"), ...NEAR, qr: hq.qr_identifier });
+    const one = await db.query<Record<string, unknown>>(
+      "select * from attendance_summary('2026-09-01', '2026-09-02') where employee_code = 'S001'");
+    expect(one.rows[0]).toMatchObject({ recorded_days: 1, late_arrivals: 1, total_late_minutes: 10, absent_days: 1 });
+    const both = await db.query<Record<string, unknown>>(
+      "select * from attendance_summary('2026-09-01', '2026-09-04') where employee_code = 'S001'");
+    // Tue 1 - Fri 4 Sep: 4 work days, 2 attended.
+    expect(both.rows[0]).toMatchObject({ recorded_days: 2, late_arrivals: 2, total_late_minutes: 30, absent_days: 2 });
+  });
+});

@@ -12,6 +12,7 @@ export default async function AdminReports({ searchParams }: PageProps<"/admin/r
       supabase={supabase}
       settings={await getSettings(supabase)}
       search={await searchParams}
+      basePath="/admin/reports"
       employeeHref={(id) => `/admin/employees/${id}`}
     />
   );

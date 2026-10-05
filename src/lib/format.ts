@@ -138,3 +138,38 @@ export function tzOffset(date: string, tz = DEFAULT_TZ) {
 export function timeInputValue(iso: string | null, tz = DEFAULT_TZ) {
   return iso ? formatTime(iso, tz) : "";
 }
+
+// Plain YYYY-MM-DD arithmetic (UTC), independent of the server's timezone.
+export function addDays(date: string, days: number) {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Quick ranges for report filters, relative to `today` in the company timezone.
+export function quickRanges(today: string) {
+  const dow = new Date(`${today}T00:00:00Z`).getUTCDay() || 7; // 1 = Monday
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const lastMonthEnd = addDays(monthStart, -1);
+  return [
+    { label: "Hari ini", from: today, to: today },
+    { label: "Semalam", from: addDays(today, -1), to: addDays(today, -1) },
+    { label: "Minggu ini", from: addDays(today, 1 - dow), to: today },
+    { label: "Bulan ini", from: monthStart, to: today },
+    { label: "Bulan lepas", from: `${lastMonthEnd.slice(0, 7)}-01`, to: lastMonthEnd },
+  ];
+}
+
+// Reads ?from=&to= with sane defaults (this month) and keeps from <= to.
+export function pickRange(from: unknown, to: unknown, today: string) {
+  let f = typeof from === "string" && isDate(from) ? from : `${today.slice(0, 7)}-01`;
+  let t = typeof to === "string" && isDate(to) ? to : today;
+  if (f > t) [f, t] = [t, f];
+  return { from: f, to: t };
+}
+
+export function formatRange(from: string, to: string) {
+  return from === to
+    ? formatDate(from, { dateStyle: "full" })
+    : `${formatDate(from, { day: "numeric", month: "short", year: "numeric" })} – ${formatDate(to, { day: "numeric", month: "short", year: "numeric" })}`;
+}
