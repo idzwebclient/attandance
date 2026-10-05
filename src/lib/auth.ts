@@ -25,7 +25,7 @@ export const getSession = cache(async () => {
 });
 
 export function homeFor(role: Role) {
-  return role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/attendance";
+  return role === "admin" ? "/admin" : "/attendance";
 }
 
 // Use at the top of every protected page and server action.

@@ -73,8 +73,25 @@ export async function updateEmployee(_prev: FormState, fd: FormData): Promise<Fo
   const p = parsed.data;
   if (p.role !== "admin" && !p.branch_id) return { error: "Staf dan manager mesti ditetapkan ke cawangan." };
   if (id === me.id && p.role !== "admin") return { error: "Anda tidak boleh membuang peranan admin anda sendiri." };
-  const { error } = await supabase.from("profiles").update(p).eq("id", id);
-  if (error) return { error: profileError(error.message) };
+  const email = str(fd, "email").toLowerCase();
+  if (email && !z.email().safeParse(email).success) return { error: "Emel tidak sah." };
+
+  const { data: current, error } = await supabase.from("profiles").update(p).eq("id", id).select("auth_user_id").single();
+  if (error || !current) return { error: profileError(error?.message ?? "") };
+
+  if (email) {
+    const admin = createAdminClient();
+    const { data: user } = await admin.auth.admin.getUserById(current.auth_user_id);
+    if (user.user && user.user.email?.toLowerCase() !== email) {
+      // Admin-confirmed change: takes effect immediately, no confirmation email.
+      const { error: emailError } = await admin.auth.admin.updateUserById(current.auth_user_id, { email, email_confirm: true });
+      if (emailError) {
+        return { error: /already|registered|exists/i.test(emailError.message) ? "Emel sudah digunakan oleh akaun lain." : "Emel tidak dapat ditukar." };
+      }
+      revalidatePath("/admin", "layout");
+      return { ok: `Disimpan. Emel log masuk kini ${email}.` };
+    }
+  }
   revalidatePath("/admin", "layout");
   return { ok: "Disimpan." };
 }

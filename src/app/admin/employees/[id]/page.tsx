@@ -53,6 +53,9 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
           <ActionForm action={updateEmployee} submitLabel="Simpan">
             <input type="hidden" name="id" value={p.id} />
             <EmployeeFields branches={branches} profile={p} />
+            <Field label="Emel log masuk" hint="Tukar jika pekerja guna emel baharu. Berkuat kuasa serta-merta.">
+              <input name="email" type="email" defaultValue={user?.user?.email ?? ""} required className={inputClass} />
+            </Field>
           </ActionForm>
         </Card>
         <Card>

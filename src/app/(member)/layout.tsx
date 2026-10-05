@@ -5,7 +5,7 @@ import { navFor } from "@/lib/nav";
 export default async function MemberLayout({ children }: LayoutProps<"/">) {
   const { profile } = await requireRole();
   return (
-    <AppShell profile={profile} nav={navFor(profile.role)} bottomNav={profile.role === "staff"}>
+    <AppShell profile={profile} nav={navFor(profile.role)} bottomNav={profile.role !== "admin"}>
       {children}
     </AppShell>
   );

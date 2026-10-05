@@ -8,8 +8,11 @@ export type NavItem = { href: string; label: string; icon: IconName; exact?: boo
 
 export function NavLinks({ items, variant }: { items: NavItem[]; variant: "tabs" | "bottom" }) {
   const pathname = usePathname();
-  const active = (item: NavItem) =>
+  const matches = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+  // Only the most specific match is active (e.g. /manager/reports is not also /manager).
+  const best = items.filter(matches).sort((a, b) => b.href.length - a.href.length)[0];
+  const active = (item: NavItem) => item === best;
 
   if (variant === "bottom") {
     return (
