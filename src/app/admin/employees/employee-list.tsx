@@ -55,7 +55,10 @@ export async function EmployeeList({ roles, title, defaultRole }: { roles: Role[
                   <td className="font-medium whitespace-nowrap">{p.full_name}</td>
                   <td>{p.employee_code}</td>
                   <td className="break-all">{emails.get(p.auth_user_id) ?? "—"}</td>
-                  <td>{ROLE_LABEL[p.role]}</td>
+                  <td className="whitespace-nowrap">
+                    {ROLE_LABEL[p.role]}
+                    {p.role === "manager" && p.qr_exempt && <> <Badge tone="info">Tanpa QR</Badge></>}
+                  </td>
                   <td className="whitespace-nowrap">{(p.branch_id && branchNames.get(p.branch_id)) || "—"}</td>
                   <td>{p.is_active ? <Badge tone="good">Aktif</Badge> : <Badge tone="bad">Tidak aktif</Badge>}</td>
                   <td><Link href={`/admin/employees/${p.id}`} className="text-brand hover:underline">Urus</Link></td>

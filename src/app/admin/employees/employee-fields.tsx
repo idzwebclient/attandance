@@ -31,6 +31,12 @@ export function EmployeeFields({
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </Field>
+      <Field label="Punch manager" hint="Untuk manager sahaja. Staf sentiasa perlu imbas QR.">
+        <select name="qr_exempt" defaultValue={String(profile?.qr_exempt ?? false)} className={inputClass}>
+          <option value="false">Mesti imbas QR di cawangan</option>
+          <option value="true">Boleh punch di mana-mana tanpa QR</option>
+        </select>
+      </Field>
     </div>
   );
 }

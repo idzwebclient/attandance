@@ -19,6 +19,7 @@ export type Profile = {
   role: Role;
   branch_id: string | null;
   is_active: boolean;
+  qr_exempt: boolean;
   created_at: string;
   updated_at: string;
 };

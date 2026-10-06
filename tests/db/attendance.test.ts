@@ -172,8 +172,19 @@ describe("accounts", () => {
     expect((await punch(db, mgr.authId, { at: at("01:00:00"), ...NEAR, qr: hq.qr_identifier })).ok).toBe(true);
   });
 
-  it("lets managers punch anywhere without QR", async () => {
+  it("makes managers scan QR unless an admin allows otherwise", async () => {
     const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
+    expect((await punch(db, mgr.authId, { at: at("01:00:00"), ...FAR })).code).toBe("OUTSIDE_RADIUS");
+    expect((await punch(db, mgr.authId, { at: at("01:00:00"), ...NEAR })).code).toBe("QR_REQUIRED");
+    // A manager cannot turn it on for themselves.
+    await asUser(db, mgr.authId, "update profiles set qr_exempt = true where id = $1", [mgr.profileId]).catch(() => []);
+    const { rows } = await db.query<{ qr_exempt: boolean }>("select qr_exempt from profiles where id = $1", [mgr.profileId]);
+    expect(rows[0].qr_exempt).toBe(false);
+  });
+
+  it("lets QR-exempt managers punch anywhere without QR", async () => {
+    const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
+    await db.query("update profiles set qr_exempt = true where id = $1", [mgr.profileId]);
     const ctx = (await db.query<{ r: Record<string, unknown> }>(
       "select app.attendance_context_at($1, $2) r", [mgr.authId, at("01:00:00")])).rows[0].r;
     expect(ctx).toMatchObject({ qr_exempt: true, qr_required: { WORK_IN: false } });
