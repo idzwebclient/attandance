@@ -171,6 +171,24 @@ describe("accounts", () => {
     const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
     expect((await punch(db, mgr.authId, { at: at("01:00:00"), ...NEAR, qr: hq.qr_identifier })).ok).toBe(true);
   });
+
+  it("lets managers punch anywhere without QR", async () => {
+    const mgr = await createUser(db, { name: "Mgr", code: "M001", role: "manager", branchId: hq.id });
+    const ctx = (await db.query<{ r: Record<string, unknown> }>(
+      "select app.attendance_context_at($1, $2) r", [mgr.authId, at("01:00:00")])).rows[0].r;
+    expect(ctx).toMatchObject({ qr_exempt: true, qr_required: { WORK_IN: false } });
+
+    expect(await punch(db, mgr.authId, { at: at("01:00:00"), ...FAR })).toMatchObject({ ok: true, is_field_work: true });
+    expect(await punch(db, mgr.authId, { at: at("04:00:00"), ...NEAR, intent: "BREAK_OUT" }))
+      .toMatchObject({ ok: true, is_remote_break: false });
+    const ev = await db.query("select verification_mode, qr_identifier_reference from attendance_events order by recorded_at");
+    expect(ev.rows).toEqual([
+      { verification_mode: "FIELD_LOCATION_ONLY", qr_identifier_reference: null },
+      { verification_mode: "REMOTE_LOCATION_ONLY", qr_identifier_reference: null },
+    ]);
+    // Staff still need QR.
+    expect((await punch(db, staff.authId, { at: at("01:00:00"), ...NEAR })).code).toBe("QR_REQUIRED");
+  });
 });
 
 describe("integrity and access", () => {

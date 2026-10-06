@@ -115,6 +115,7 @@ export type AttendanceContext =
       qr_required: Partial<Record<EventType, boolean>> | null;
       field_work: boolean;
       field_work_note: string | null;
+      qr_exempt: boolean;
     }
   | Failure;
 

@@ -117,8 +117,8 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
       const position = locate();
       if (pendingQr) {
         submit(event, position, pendingQr);
-      } else if (ctx.ok && ctx.field_work) {
-        // Approved field work: the server only asks for QR when we are at the branch.
+      } else if (ctx.ok && (ctx.field_work || ctx.qr_exempt)) {
+        // Managers never need QR; approved field work only at the branch (the server asks if so).
         submit(event, position, null);
       } else if (event !== "BREAK_OUT" && event !== "BREAK_IN") {
         // QR is always required to start or end work (or extra work): open the camera right away.
@@ -266,7 +266,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
             <p className="text-center text-xs text-muted">
               {pendingQr
                 ? "Kod QR sudah diimbas. Tekan butang di atas."
-                : ctx.field_work
+                : ctx.field_work || ctx.qr_exempt
                   ? "Tekan butang. Lokasi anda akan direkod."
                   : "Tekan butang, kemudian imbas kod QR di kedai jika diminta."}
             </p>
