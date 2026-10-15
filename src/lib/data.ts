@@ -10,6 +10,7 @@ export async function getSettings(supabase: SupabaseClient): Promise<Settings> {
       work_start_time: "09:00:00",
       work_end_time: "18:00:00",
       break_max_minutes: 60,
+      friday_break_max_minutes: null,
       default_radius_meters: 100,
       max_location_accuracy_meters: 100,
       timezone: DEFAULT_TZ,

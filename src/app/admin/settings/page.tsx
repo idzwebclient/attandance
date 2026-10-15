@@ -35,6 +35,9 @@ export default async function SettingsPage() {
             <Field label="Had rehat (minit)">
               <input type="number" name="break_max_minutes" min={1} defaultValue={s.break_max_minutes} required className={inputClass} />
             </Field>
+            <Field label="Had rehat Jumaat (minit)" hint="Contoh 120 untuk 2 jam. Kosongkan untuk guna had biasa.">
+              <input type="number" name="friday_break_max_minutes" min={1} defaultValue={s.friday_break_max_minutes ?? ""} className={inputClass} />
+            </Field>
             <Field label="Radius lalai (meter)" hint="Untuk cawangan baharu.">
               <input type="number" name="default_radius_meters" min={10} defaultValue={s.default_radius_meters} required className={inputClass} />
             </Field>

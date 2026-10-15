@@ -63,6 +63,19 @@ describe("calculations", () => {
     });
   });
 
+  it("uses the Friday break limit on Fridays only", async () => {
+    await db.query("update system_settings set friday_break_max_minutes = 120");
+    // Fri 9 Oct: 110 min break is within the 2-hour Friday limit.
+    const fri = await punch(db, staff.authId, { at: at("01:00:00", "2026-10-09"), ...NEAR, qr: hq.qr_identifier });
+    expect(fri.ok).toBe(true);
+    await punch(db, staff.authId, { at: at("04:00:00", "2026-10-09"), ...NEAR, qr: hq.qr_identifier, intent: "BREAK_OUT" });
+    const back = await punch(db, staff.authId, { at: at("05:50:00", "2026-10-09"), ...NEAR, qr: hq.qr_identifier });
+    expect(back.day).toMatchObject({ break_duration_minutes: 110, break_status: "WITHIN_LIMIT", excess_break_minutes: 0 });
+    // Mon 5 Oct: same break is 50 min over the normal 60-min limit.
+    const r = await fullDay(["01:00:00", "04:00:00", "05:50:00", "10:00:00"]);
+    expect(r[3].day).toMatchObject({ break_status: "BREAK_EXCEEDED", excess_break_minutes: 50 });
+  });
+
   it("flags early arrival", async () => {
     const r = await punch(db, staff.authId, { at: at("00:42:00"), ...NEAR, qr: hq.qr_identifier });
     expect(r.day).toMatchObject({ arrival_status: "EARLY", early_arrival_minutes: 18, completion_status: "WORKING" });

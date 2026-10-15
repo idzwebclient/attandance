@@ -70,6 +70,7 @@ export type Settings = {
   work_start_time: string;
   work_end_time: string;
   break_max_minutes: number;
+  friday_break_max_minutes: number | null;
   default_radius_meters: number;
   max_location_accuracy_meters: number;
   timezone: string;
