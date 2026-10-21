@@ -75,7 +75,7 @@ export default async function AdminLeave() {
                         );
                       })}
                       <p className="border-t border-border px-3 py-1.5 text-xs text-muted">
-                        Ikut tarikh mula kerja di halaman pekerja. Kosongkan baris untuk buang. Tiada cuti tahunan semasa percubaan.
+                        Dikira dari tarikh tamat percubaan (atau tarikh mula kerja) di halaman pekerja. Kosongkan baris untuk buang. Tiada cuti tahunan semasa percubaan.
                       </p>
                     </div>
                   )}

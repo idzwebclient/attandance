@@ -99,6 +99,9 @@ describe("leave requests", () => {
     expect(await ent()).toBe(14);
     await db.query("update profiles set hire_date = '2018-01-01' where id = $1", [staff.profileId]);
     expect(await ent()).toBe(16);
+    // Service counts from the end of probation when set.
+    await db.query("update profiles set probation_end_date = '2021-06-01' where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(14);
     await db.query("update profiles set annual_leave_days = 20 where id = $1", [staff.profileId]);
     expect(await ent()).toBe(20);
   });

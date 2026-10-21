@@ -35,7 +35,7 @@ export function EmployeeFields({
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </Field>
-      <Field label="Tarikh mula kerja" hint="Untuk kira cuti tahunan ikut tempoh perkhidmatan.">
+      <Field label="Tarikh mula kerja" hint="Tempoh perkhidmatan dikira dari tarikh tamat percubaan, atau tarikh ini jika tiada.">
         <input type="date" name="hire_date" defaultValue={profile?.hire_date ?? ""} className={inputClass} />
       </Field>
       <Field label="Tarikh tamat percubaan" hint="Tiada cuti tahunan sehingga tarikh ini. Kosongkan jika sudah disahkan.">
