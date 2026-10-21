@@ -53,14 +53,15 @@ export async function updateLeavePolicies(_prev: LeaveState, fd: FormData): Prom
       .eq("leave_type", type);
     if (error) return { error: "Simpan gagal. Cuba lagi." };
   }
+  const tiers = await saveAnnualTiers(supabase, fd);
+  if (tiers.error) return tiers;
   revalidatePath("/", "layout");
   return { ok: "Polisi cuti disimpan." };
 }
 
-export async function updateAnnualTiers(_prev: LeaveState, fd: FormData): Promise<LeaveState> {
-  const { supabase } = await requireRole("admin");
+async function saveAnnualTiers(supabase: Awaited<ReturnType<typeof requireRole>>["supabase"], fd: FormData): Promise<LeaveState> {
   const tiers = new Map<number, number>();
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 20; i++) {
     const years = String(fd.get(`years_${i}`) ?? "").trim();
     const days = String(fd.get(`tierdays_${i}`) ?? "").trim();
     if (years === "" && days === "") continue;
@@ -78,6 +79,5 @@ export async function updateAnnualTiers(_prev: LeaveState, fd: FormData): Promis
       .insert([...tiers].map(([min_years, days]) => ({ min_years, days })));
     if (error) return { error: "Simpan gagal. Cuba lagi." };
   }
-  revalidatePath("/", "layout");
-  return { ok: "Tahap cuti tahunan disimpan." };
+  return {};
 }

@@ -5,7 +5,7 @@ import { Card, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getLeavePolicies, getSettings } from "@/lib/data";
 import { LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
-import { updateAnnualTiers, updateLeavePolicies } from "@/lib/leave-actions";
+import { updateLeavePolicies } from "@/lib/leave-actions";
 import type { LeaveType } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Cuti" };
@@ -24,51 +24,64 @@ export default async function AdminLeave() {
       <Card>
         <h2 className="mb-1 font-medium">Polisi cuti</h2>
         <p className="mb-3 text-sm text-muted">
-          Had hari setahun untuk setiap pekerja. Kosongkan untuk tiada had. Hanya hari bekerja dikira (cuti umum tidak dikira).
+          Tandakan jenis cuti yang dibuka kepada pekerja. Had dikira setahun, hari bekerja sahaja (hujung minggu dan cuti umum tidak dikira).
         </p>
         <ActionForm action={updateLeavePolicies} submitLabel="Simpan polisi cuti">
           <div className="divide-y divide-border rounded-xl border border-border">
             {(Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]).map((t) => {
               const p = policies.get(t);
               return (
-                <div key={t} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
-                  <label className="flex items-center gap-2 text-sm font-medium">
-                    <input type="checkbox" name={`active_${t}`} defaultChecked={p?.is_active ?? true} />
-                    {LEAVE_TYPE_LABEL[t]}
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-muted">
-                    <input type="number" name={`days_${t}`} min={0} max={366} defaultValue={p?.annual_days ?? ""}
-                      placeholder="Tiada had" className={`${inputClass} !min-h-9 w-28 !py-1`} />
-                    hari / tahun
-                  </label>
+                <div key={t} className="space-y-2 px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <input type="checkbox" name={`active_${t}`} defaultChecked={p?.is_active ?? true} />
+                      {LEAVE_TYPE_LABEL[t]}
+                    </label>
+                    {t === "ANNUAL" ? (
+                      <>
+                        <input type="hidden" name={`days_${t}`} value={p?.annual_days ?? ""} />
+                        <span className="text-xs text-muted">Ikut tempoh perkhidmatan</span>
+                      </>
+                    ) : (
+                      <label className="flex items-center gap-2 text-sm text-muted">
+                        <input type="number" name={`days_${t}`} min={0} max={366} defaultValue={p?.annual_days ?? ""}
+                          placeholder="Tiada had" className={`${inputClass} !min-h-9 !w-24 !py-1`} />
+                        hari
+                      </label>
+                    )}
+                  </div>
                   {t === "ANNUAL" && (
-                    <p className="w-full text-xs text-muted">
-                      Untuk pekerja tanpa tarikh mula kerja. Lain-lain ikut tahap di bawah atau had khas pekerja.
-                    </p>
+                    <div className="overflow-hidden rounded-lg border border-border text-sm">
+                      <div className="grid grid-cols-2 bg-neutral-bg px-3 py-1.5 text-xs font-medium text-muted">
+                        <span>Tempoh perkhidmatan</span><span>Jumlah cuti</span>
+                      </div>
+                      {[...tiers, undefined].map((tier, i) => {
+                        const next = tiers[i + 1]?.min_years;
+                        return (
+                          <div key={i} className="grid grid-cols-2 items-center gap-2 border-t border-border px-3 py-1.5">
+                            <label className="flex flex-wrap items-center gap-1.5">
+                              <input type="number" name={`years_${i}`} min={0} defaultValue={tier?.min_years ?? ""}
+                                placeholder={tier ? "" : "Tambah"} className={`${inputClass} !min-h-8 !w-20 !py-0.5`} />
+                              <span className="text-xs text-muted">
+                                {tier ? (next != null ? `hingga ${next} tahun` : "tahun ke atas") : "tahun ke atas"}
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-1.5">
+                              <input type="number" name={`tierdays_${i}`} min={0} max={366} defaultValue={tier?.days ?? ""}
+                                className={`${inputClass} !min-h-8 !w-20 !py-0.5`} />
+                              <span className="text-xs text-muted">hari</span>
+                            </label>
+                          </div>
+                        );
+                      })}
+                      <p className="border-t border-border px-3 py-1.5 text-xs text-muted">
+                        Ikut tarikh mula kerja di halaman pekerja. Kosongkan baris untuk buang. Tiada cuti tahunan semasa percubaan.
+                      </p>
+                    </div>
                   )}
                 </div>
               );
             })}
-          </div>
-        </ActionForm>
-      </Card>
-      <Card>
-        <h2 className="mb-1 font-medium">Cuti tahunan ikut tempoh perkhidmatan</h2>
-        <p className="mb-3 text-sm text-muted">
-          Dikira dari tarikh mula kerja pekerja (tahun genap pada 1 Januari). Had khas di halaman pekerja mengatasi tahap ini.
-          Kosongkan baris untuk buang.
-        </p>
-        <ActionForm action={updateAnnualTiers} submitLabel="Simpan tahap">
-          <div className="space-y-2">
-            {Array.from({ length: 6 }, (_, i) => tiers[i]).map((t, i) => (
-              <div key={i} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-muted">Dari</span>
-                <input type="number" name={`years_${i}`} min={0} defaultValue={t?.min_years ?? ""} className={`${inputClass} !min-h-9 w-20 !py-1`} />
-                <span className="text-muted">tahun ke atas:</span>
-                <input type="number" name={`tierdays_${i}`} min={0} max={366} defaultValue={t?.days ?? ""} className={`${inputClass} !min-h-9 w-20 !py-1`} />
-                <span className="text-muted">hari</span>
-              </div>
-            ))}
           </div>
         </ActionForm>
       </Card>
