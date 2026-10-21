@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { AttendanceTable } from "@/components/attendance-table";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { ActionForm } from "@/components/form-state";
+import { LeaveBalanceTable } from "@/components/leave-balance-table";
 import { MonthlySummaryTable } from "@/components/monthly-summary-table";
 import { Badge, Button, Card, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getBranchNames, getMonthlySummary, getMonthReports, getSettings, pickMonth, currentMonth } from "@/lib/data";
-import { formatPeriod } from "@/lib/format";
+import { formatPeriod, todayIn } from "@/lib/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/lib/types";
 import { resetPassword, setEmployeeActive, updateEmployee } from "../../actions";
@@ -68,6 +69,13 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
           </ActionForm>
         </Card>
       </div>
+
+      {p.role !== "admin" && (
+        <section className="space-y-2">
+          <h2 className="font-medium">Baki cuti {todayIn(settings.timezone).slice(0, 4)}</h2>
+          <LeaveBalanceTable supabase={supabase} today={todayIn(settings.timezone)} employeeId={p.id} />
+        </section>
+      )}
 
       {p.role !== "admin" && (
         <section className="space-y-3">

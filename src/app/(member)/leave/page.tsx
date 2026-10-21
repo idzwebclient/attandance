@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ActionForm } from "@/components/form-state";
 import { LeaveApprovals, leaveDates } from "@/components/leave-approvals";
+import { LeaveBalanceTable } from "@/components/leave-balance-table";
 import { Badge, Button, Card, Empty, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getLeaveBalances, getLeavePolicies, getSettings } from "@/lib/data";
@@ -116,6 +117,8 @@ export default async function LeavePage() {
         <section className="space-y-2 border-t border-border pt-5">
           <h2 className="text-lg font-semibold">Permohonan pasukan</h2>
           <LeaveApprovals supabase={supabase} today={today} excludeEmployeeId={profile.id} staffOnly />
+          <h3 className="pt-2 font-medium">Baki cuti pasukan {year}</h3>
+          <LeaveBalanceTable supabase={supabase} today={today} hrefBase="/manager/employees/" />
         </section>
       )}
     </div>

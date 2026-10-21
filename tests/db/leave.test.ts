@@ -154,4 +154,14 @@ describe("leave requests", () => {
     expect(await apply(staff, "2026-03-02", "2026-03-18")).toMatchObject({ ok: false, code: "LIMIT" }); // 13 days
     expect(await apply(staff, "2026-03-02", "2026-03-17")).toMatchObject({ ok: true }); // 12 days
   });
+
+  it("shows balances to managers for their branch only", async () => {
+    const codes = async (u: { authId: string }) => (await asUser<{ employee_code: string }>(db, u.authId,
+      "select distinct p.employee_code from leave_balances(2026) b join profiles p on p.id = b.employee_id order by 1"))
+      .map((r) => r.employee_code);
+    expect(await codes(manager)).toEqual(["M001", "S001"]);
+    expect(await codes(otherManager)).toEqual(["M002"]);
+    expect(await codes(admin)).toEqual(["M001", "M002", "S001"]);
+    expect(await codes(staff)).toEqual(["S001"]);
+  });
 });

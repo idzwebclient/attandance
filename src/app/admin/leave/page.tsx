@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ActionForm } from "@/components/form-state";
 import { LeaveApprovals } from "@/components/leave-approvals";
+import { LeaveBalanceTable } from "@/components/leave-balance-table";
 import { Card, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getLeavePolicies, getSettings } from "@/lib/data";
@@ -99,6 +100,11 @@ export default async function AdminLeave() {
         </ActionForm>
       </Card>
       <LeaveApprovals supabase={supabase} today={todayIn(settings.timezone)} />
+      <section className="space-y-2">
+        <h2 className="font-medium">Baki cuti pekerja {todayIn(settings.timezone).slice(0, 4)}</h2>
+        <p className="text-xs text-muted">Hari tinggal / jumlah setahun. Termasuk permohonan yang masih menunggu.</p>
+        <LeaveBalanceTable supabase={supabase} today={todayIn(settings.timezone)} hrefBase="/admin/employees/" />
+      </section>
     </div>
   );
 }
