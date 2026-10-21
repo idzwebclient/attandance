@@ -38,6 +38,9 @@ export function EmployeeFields({
       <Field label="Tarikh mula kerja" hint="Untuk kira cuti tahunan ikut tempoh perkhidmatan.">
         <input type="date" name="hire_date" defaultValue={profile?.hire_date ?? ""} className={inputClass} />
       </Field>
+      <Field label="Tarikh tamat percubaan" hint="Tiada cuti tahunan sehingga tarikh ini. Kosongkan jika sudah disahkan.">
+        <input type="date" name="probation_end_date" defaultValue={profile?.probation_end_date ?? ""} className={inputClass} />
+      </Field>
       <Field label="Cuti tahunan khas (hari)" hint="Kosongkan untuk ikut tempoh perkhidmatan.">
         <input type="number" name="annual_leave_days" min={0} max={366} defaultValue={profile?.annual_leave_days ?? ""}
           className={inputClass} />

@@ -4,7 +4,7 @@
 --
 -- Annual leave can instead depend on length of service: each employee has a
 -- hire date, admins define tiers ("from N completed years: D days"), and an
--- employee may have a personal override.
+-- employee may have a personal override. No annual leave during probation.
 
 create table public.leave_policies (
   leave_type public.leave_type primary key,
@@ -25,14 +25,15 @@ revoke all on public.leave_policies from anon;
 
 alter table public.profiles
   add column hire_date date,
+  add column probation_end_date date,
   add column annual_leave_days integer check (annual_leave_days >= 0);
 
 create table public.annual_leave_tiers (
   min_years integer primary key check (min_years >= 0),
   days integer not null check (days >= 0)
 );
--- Employment Act 1955 minimums; admins can change them.
-insert into public.annual_leave_tiers values (0, 8), (2, 12), (5, 16);
+-- Company policy defaults; admins can change them.
+insert into public.annual_leave_tiers values (0, 12), (2, 14), (5, 16);
 
 alter table public.annual_leave_tiers enable row level security;
 create policy annual_leave_tiers_read on public.annual_leave_tiers for select to authenticated using (true);
@@ -114,6 +115,10 @@ begin
   select * into pol from public.leave_policies where leave_type = p_type;
   if pol.leave_type is null or not pol.is_active then
     return app.fail('TYPE_DISABLED', 'Jenis cuti ini tidak dibuka.');
+  end if;
+  if p_type = 'ANNUAL' and me.probation_end_date is not null and p_from <= me.probation_end_date then
+    return app.fail('PROBATION', format('Cuti tahunan hanya boleh dimohon selepas tamat percubaan (%s).',
+                                        to_char(me.probation_end_date, 'DD/MM/YYYY')));
   end if;
   if app.leave_work_days(p_from, p_to) = 0 then
     return app.fail('NO_WORK_DAYS', 'Tarikh dipilih bukan hari bekerja.');

@@ -21,6 +21,7 @@ export type Profile = {
   is_active: boolean;
   qr_exempt: boolean;
   hire_date: string | null;
+  probation_end_date: string | null;
   annual_leave_days: number | null;
   created_at: string;
   updated_at: string;

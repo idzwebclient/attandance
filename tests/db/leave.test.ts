@@ -94,12 +94,19 @@ describe("leave requests", () => {
       "select app.leave_entitlement($1, 'ANNUAL', 2026) as n", [staff.profileId])).rows[0].n;
     expect(await ent()).toBe(null); // no hire date, no general limit
     await db.query("update profiles set hire_date = '2025-03-01' where id = $1", [staff.profileId]);
-    expect(await ent()).toBe(8);
-    await db.query("update profiles set hire_date = '2023-06-01' where id = $1", [staff.profileId]);
     expect(await ent()).toBe(12);
+    await db.query("update profiles set hire_date = '2023-06-01' where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(14);
     await db.query("update profiles set hire_date = '2018-01-01' where id = $1", [staff.profileId]);
     expect(await ent()).toBe(16);
     await db.query("update profiles set annual_leave_days = 20 where id = $1", [staff.profileId]);
     expect(await ent()).toBe(20);
+  });
+
+  it("blocks annual leave during probation", async () => {
+    await db.query("update profiles set probation_end_date = '2026-09-30' where id = $1", [staff.profileId]);
+    expect(await apply(staff, "2026-09-28", "2026-09-28")).toMatchObject({ ok: false, code: "PROBATION" });
+    expect(await apply(staff, "2026-09-28", "2026-09-28", "SICK")).toMatchObject({ ok: true });
+    expect(await apply(staff, "2026-10-01", "2026-10-01")).toMatchObject({ ok: true });
   });
 });

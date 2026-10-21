@@ -4,7 +4,7 @@ import { LeaveApprovals, leaveDates } from "@/components/leave-approvals";
 import { Badge, Button, Card, Empty, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getLeaveBalances, getLeavePolicies, getSettings } from "@/lib/data";
-import { LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE, LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
+import { formatDate, LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE, LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
 import { applyLeave, cancelLeave } from "@/lib/leave-actions";
 import type { LeaveRequest, LeaveType } from "@/lib/types";
 
@@ -40,7 +40,9 @@ export default async function LeavePage() {
             return (
               <li key={t} className="flex items-center justify-between px-4 py-2 text-sm">
                 <span>{LEAVE_TYPE_LABEL[t]}</span>
-                {limit == null ? (
+                {t === "ANNUAL" && profile.probation_end_date && profile.probation_end_date >= today ? (
+                  <span className="text-muted">Dalam percubaan hingga {formatDate(profile.probation_end_date)}</span>
+                ) : limit == null ? (
                   <span className="text-muted">Guna {u} hari · tiada had</span>
                 ) : (
                   <span><b className={u >= limit ? "text-bad" : ""}>{Math.max(limit - u, 0)}</b> <span className="text-muted">/ {limit} hari tinggal</span></span>
