@@ -18,6 +18,8 @@ export default async function AccountPage() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="text-muted">Nama</dt><dd>{profile.full_name}</dd>
           <dt className="text-muted">No. pekerja</dt><dd>{profile.employee_code}</dd>
+          <dt className="text-muted">No. telefon</dt><dd>{profile.phone ?? "—"}</dd>
+          <dt className="text-muted">No. IC</dt><dd>{profile.ic_number ?? "—"}</dd>
           <dt className="text-muted">Emel</dt><dd className="break-all">{email ?? "—"}</dd>
           <dt className="text-muted">Peranan</dt><dd>{ROLE[profile.role]}</dd>
           <dt className="text-muted">Cawangan</dt><dd>{branch?.name ?? "—"}</dd>

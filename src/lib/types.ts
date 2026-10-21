@@ -20,6 +20,8 @@ export type Profile = {
   branch_id: string | null;
   is_active: boolean;
   qr_exempt: boolean;
+  phone: string | null;
+  ic_number: string | null;
   hire_date: string | null;
   probation_end_date: string | null;
   annual_leave_days: number | null;

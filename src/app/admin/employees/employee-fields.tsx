@@ -22,6 +22,12 @@ export function EmployeeFields({
           <input value="Automatik" disabled className={`${inputClass} text-muted`} />
         )}
       </Field>
+      <Field label="No. telefon">
+        <input name="phone" type="tel" inputMode="tel" defaultValue={profile?.phone ?? ""} placeholder="012-345 6789" className={inputClass} />
+      </Field>
+      <Field label="No. IC">
+        <input name="ic_number" inputMode="numeric" defaultValue={profile?.ic_number ?? ""} placeholder="900101-02-1234" className={inputClass} />
+      </Field>
       <Field label="Peranan">
         <select name="role" defaultValue={profile?.role ?? defaultRole} className={inputClass}>
           <option value="staff">Staf</option>

@@ -26,6 +26,8 @@ const profileFields = z.object({
   role,
   branch_id: z.uuid("Cawangan tidak sah.").nullable(),
   qr_exempt: z.boolean(),
+  phone: z.string().regex(/^\+?[0-9 -]{8,20}$/, "No. telefon tidak sah.").nullable(),
+  ic_number: z.string().regex(/^\d{6}-\d{2}-\d{4}$/, "No. IC mesti 12 digit, contoh 900101-02-1234.").nullable(),
   hire_date: z.iso.date("Tarikh mula kerja tidak sah.").nullable(),
   probation_end_date: z.iso.date("Tarikh tamat percubaan tidak sah.").nullable(),
   annual_leave_days: z.coerce.number().int().min(0, "Cuti tahunan khas tidak sah.").max(366).nullable(),
@@ -39,14 +41,25 @@ function readProfile(fd: FormData, employeeCode = str(fd, "employee_code")) {
     branch_id: optional(fd, "branch_id"),
     // Only managers can punch without QR.
     qr_exempt: str(fd, "role") === "manager" && str(fd, "qr_exempt") === "true",
+    phone: optional(fd, "phone"),
+    ic_number: formatIc(str(fd, "ic_number")),
     hire_date: optional(fd, "hire_date"),
     probation_end_date: optional(fd, "probation_end_date"),
     annual_leave_days: optional(fd, "annual_leave_days"),
   });
 }
 
+// Accepts 900101021234 or 900101-02-1234; anything else is left for validation to reject.
+function formatIc(raw: string) {
+  if (!raw) return null;
+  const digits = raw.replace(/[\s-]/g, "");
+  return /^\d{12}$/.test(digits) ? `${digits.slice(0, 6)}-${digits.slice(6, 8)}-${digits.slice(8)}` : raw;
+}
+
 function profileError(message: string) {
-  return /employee_code/.test(message) ? "No. pekerja sudah digunakan." : "Simpan gagal. Cuba lagi.";
+  if (/employee_code/.test(message)) return "No. pekerja sudah digunakan.";
+  if (/ic_number/.test(message)) return "No. IC sudah digunakan oleh pekerja lain.";
+  return "Simpan gagal. Cuba lagi.";
 }
 
 // Next code after the highest "S0001"-style code, e.g. S0007 -> S0008.
