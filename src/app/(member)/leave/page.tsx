@@ -43,7 +43,9 @@ export default async function LeavePage() {
                 {t === "ANNUAL" && profile.probation_end_date && profile.probation_end_date >= today ? (
                   <span className="text-muted">Dalam percubaan hingga {formatDate(profile.probation_end_date)}</span>
                 ) : limit == null ? (
-                  <span className="text-muted">Guna {u} hari · tiada had</span>
+                  <span className="text-muted">
+                    {t === "ANNUAL" ? "Belum ditetapkan" : u ? `Sudah guna ${u} hari` : "—"}
+                  </span>
                 ) : (
                   <span><b className={u >= limit ? "text-bad" : ""}>{Math.max(limit - u, 0)}</b> <span className="text-muted">/ {limit} hari tinggal</span></span>
                 )}
