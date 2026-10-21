@@ -28,10 +28,10 @@ const profileFields = z.object({
   qr_exempt: z.boolean(),
 });
 
-function readProfile(fd: FormData) {
+function readProfile(fd: FormData, employeeCode = str(fd, "employee_code")) {
   return profileFields.safeParse({
     full_name: str(fd, "full_name"),
-    employee_code: str(fd, "employee_code"),
+    employee_code: employeeCode,
     role: str(fd, "role"),
     branch_id: optional(fd, "branch_id"),
     // Only managers can punch without QR.
@@ -43,9 +43,17 @@ function profileError(message: string) {
   return /employee_code/.test(message) ? "No. pekerja sudah digunakan." : "Simpan gagal. Cuba lagi.";
 }
 
+// Next code after the highest "S0001"-style code, e.g. S0007 -> S0008.
+async function nextEmployeeCode(admin: ReturnType<typeof createAdminClient>) {
+  const { data } = await admin.from("profiles").select("employee_code");
+  const max = Math.max(0, ...(data ?? []).map((r) => Number(/^S(\d+)$/i.exec(r.employee_code)?.[1] ?? 0)));
+  return `S${String(max + 1).padStart(4, "0")}`;
+}
+
 export async function createEmployee(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireRole("admin");
-  const parsed = readProfile(fd);
+  const admin = createAdminClient();
+  const parsed = readProfile(fd, await nextEmployeeCode(admin));
   if (!parsed.success) return { error: firstIssue(parsed.error) };
   const p = parsed.data;
   if (p.role !== "admin" && !p.branch_id) return { error: "Staf dan manager mesti ditetapkan ke cawangan." };
@@ -54,7 +62,6 @@ export async function createEmployee(_prev: FormState, fd: FormData): Promise<Fo
   if (!z.email().safeParse(email).success) return { error: "Emel tidak sah." };
   if (password.length < 8) return { error: "Kata laluan sementara mesti sekurang-kurangnya 8 aksara." };
 
-  const admin = createAdminClient();
   const { data: created, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !created.user) {
     return { error: /already/i.test(error?.message ?? "") ? "Emel sudah didaftarkan." : "Akaun tidak dapat dicipta." };
@@ -65,7 +72,7 @@ export async function createEmployee(_prev: FormState, fd: FormData): Promise<Fo
     return { error: profileError(insertError.message) };
   }
   revalidatePath("/admin", "layout");
-  return { ok: `Akaun ${p.full_name} dicipta. Berikan emel dan kata laluan sementara kepada pekerja.` };
+  return { ok: `Akaun ${p.full_name} (${p.employee_code}) dicipta. Berikan emel dan kata laluan sementara kepada pekerja.` };
 }
 
 export async function updateEmployee(_prev: FormState, fd: FormData): Promise<FormState> {

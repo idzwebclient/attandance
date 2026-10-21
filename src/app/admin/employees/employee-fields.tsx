@@ -15,8 +15,12 @@ export function EmployeeFields({
       <Field label="Nama penuh">
         <input name="full_name" defaultValue={profile?.full_name} required className={inputClass} />
       </Field>
-      <Field label="No. pekerja">
-        <input name="employee_code" defaultValue={profile?.employee_code} required className={inputClass} />
+      <Field label="No. pekerja" hint={profile ? undefined : "Dijana automatik semasa simpan."}>
+        {profile ? (
+          <input name="employee_code" defaultValue={profile.employee_code} required className={inputClass} />
+        ) : (
+          <input value="Automatik" disabled className={`${inputClass} text-muted`} />
+        )}
       </Field>
       <Field label="Peranan">
         <select name="role" defaultValue={profile?.role ?? defaultRole} className={inputClass}>
