@@ -26,6 +26,8 @@ const profileFields = z.object({
   role,
   branch_id: z.uuid("Cawangan tidak sah.").nullable(),
   qr_exempt: z.boolean(),
+  hire_date: z.iso.date("Tarikh mula kerja tidak sah.").nullable(),
+  annual_leave_days: z.coerce.number().int().min(0, "Cuti tahunan khas tidak sah.").max(366).nullable(),
 });
 
 function readProfile(fd: FormData, employeeCode = str(fd, "employee_code")) {
@@ -36,6 +38,8 @@ function readProfile(fd: FormData, employeeCode = str(fd, "employee_code")) {
     branch_id: optional(fd, "branch_id"),
     // Only managers can punch without QR.
     qr_exempt: str(fd, "role") === "manager" && str(fd, "qr_exempt") === "true",
+    hire_date: optional(fd, "hire_date"),
+    annual_leave_days: optional(fd, "annual_leave_days"),
   });
 }
 

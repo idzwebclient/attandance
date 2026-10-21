@@ -56,3 +56,28 @@ export async function updateLeavePolicies(_prev: LeaveState, fd: FormData): Prom
   revalidatePath("/", "layout");
   return { ok: "Polisi cuti disimpan." };
 }
+
+export async function updateAnnualTiers(_prev: LeaveState, fd: FormData): Promise<LeaveState> {
+  const { supabase } = await requireRole("admin");
+  const tiers = new Map<number, number>();
+  for (let i = 0; i < 6; i++) {
+    const years = String(fd.get(`years_${i}`) ?? "").trim();
+    const days = String(fd.get(`tierdays_${i}`) ?? "").trim();
+    if (years === "" && days === "") continue;
+    const y = Number(years);
+    const d = Number(days);
+    if (!Number.isInteger(y) || y < 0 || !Number.isInteger(d) || d < 0 || d > 366) {
+      return { error: "Tahap cuti tahunan tidak sah." };
+    }
+    tiers.set(y, d);
+  }
+  const { error: delError } = await supabase.from("annual_leave_tiers").delete().gte("min_years", 0);
+  if (delError) return { error: "Simpan gagal. Cuba lagi." };
+  if (tiers.size) {
+    const { error } = await supabase.from("annual_leave_tiers")
+      .insert([...tiers].map(([min_years, days]) => ({ min_years, days })));
+    if (error) return { error: "Simpan gagal. Cuba lagi." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: "Tahap cuti tahunan disimpan." };
+}

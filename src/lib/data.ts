@@ -167,8 +167,8 @@ export async function getLeavePolicies(supabase: SupabaseClient) {
   return new Map(((data ?? []) as LeavePolicy[]).map((p) => [p.leave_type, p]));
 }
 
-// Days used (pending + approved) in a year, keyed "employeeId:TYPE".
-export async function getLeaveUsed(supabase: SupabaseClient, year: number, employeeId?: string) {
+// Entitlement and days used (pending + approved) in a year, keyed "employeeId:TYPE".
+export async function getLeaveBalances(supabase: SupabaseClient, year: number, employeeId?: string) {
   const { data } = await supabase.rpc("leave_balances", { p_year: year, p_employee_id: employeeId ?? null });
-  return new Map(((data ?? []) as LeaveBalance[]).map((b) => [`${b.employee_id}:${b.leave_type}`, b.used_days]));
+  return new Map(((data ?? []) as LeaveBalance[]).map((b) => [`${b.employee_id}:${b.leave_type}`, b]));
 }

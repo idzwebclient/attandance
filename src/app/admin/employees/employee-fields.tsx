@@ -35,6 +35,13 @@ export function EmployeeFields({
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </Field>
+      <Field label="Tarikh mula kerja" hint="Untuk kira cuti tahunan ikut tempoh perkhidmatan.">
+        <input type="date" name="hire_date" defaultValue={profile?.hire_date ?? ""} className={inputClass} />
+      </Field>
+      <Field label="Cuti tahunan khas (hari)" hint="Kosongkan untuk ikut tempoh perkhidmatan.">
+        <input type="number" name="annual_leave_days" min={0} max={366} defaultValue={profile?.annual_leave_days ?? ""}
+          className={inputClass} />
+      </Field>
       <Field label="Punch manager" hint="Untuk manager sahaja. Staf sentiasa perlu imbas QR.">
         <select name="qr_exempt" defaultValue={String(profile?.qr_exempt ?? false)} className={inputClass}>
           <option value="false">Mesti imbas QR di cawangan</option>

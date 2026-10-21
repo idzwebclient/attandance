@@ -20,6 +20,8 @@ export type Profile = {
   branch_id: string | null;
   is_active: boolean;
   qr_exempt: boolean;
+  hire_date: string | null;
+  annual_leave_days: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -143,7 +145,7 @@ export type LeaveType = "ANNUAL" | "SICK" | "EMERGENCY" | "UNPAID" | "OTHER";
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 export type LeavePolicy = { leave_type: LeaveType; is_active: boolean; annual_days: number | null };
-export type LeaveBalance = { employee_id: string; leave_type: LeaveType; used_days: number };
+export type LeaveBalance = { employee_id: string; leave_type: LeaveType; limit_days: number | null; used_days: number };
 
 export type LeaveRequest = {
   id: string;

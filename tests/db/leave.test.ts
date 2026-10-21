@@ -73,6 +73,7 @@ describe("leave requests", () => {
 
   it("enforces the admin's yearly limit and disabled types", async () => {
     await db.query("update leave_policies set annual_days = 3 where leave_type = 'ANNUAL'");
+    await db.query("delete from annual_leave_tiers");
     await db.query("update leave_policies set is_active = false where leave_type = 'UNPAID'");
     expect(await apply(staff, "2026-09-07", "2026-09-07", "UNPAID")).toMatchObject({ ok: false, code: "TYPE_DISABLED" });
     expect(await apply(staff, "2026-09-12", "2026-09-13")).toMatchObject({ ok: false, code: "NO_WORK_DAYS" });
@@ -83,8 +84,22 @@ describe("leave requests", () => {
     expect(await apply(staff, "2026-09-14", "2026-09-14")).toMatchObject({ ok: true });
     // Sick leave has no limit.
     expect(await apply(staff, "2026-10-05", "2026-10-09", "SICK")).toMatchObject({ ok: true });
-    const bal = await asUser<{ leave_type: string; used_days: number }>(db, staff.authId,
-      "select leave_type, used_days from leave_balances(2026) order by leave_type");
-    expect(bal).toEqual([{ leave_type: "ANNUAL", used_days: 3 }, { leave_type: "SICK", used_days: 5 }]);
+    const bal = await asUser<{ leave_type: string; limit_days: number | null; used_days: number }>(db, staff.authId,
+      "select leave_type, limit_days, used_days from leave_balances(2026) where leave_type in ('ANNUAL', 'SICK') order by leave_type");
+    expect(bal).toEqual([{ leave_type: "ANNUAL", limit_days: 3, used_days: 3 }, { leave_type: "SICK", limit_days: null, used_days: 5 }]);
+  });
+
+  it("gives annual leave by length of service, with a personal override", async () => {
+    const ent = async () => (await db.query<{ n: number | null }>(
+      "select app.leave_entitlement($1, 'ANNUAL', 2026) as n", [staff.profileId])).rows[0].n;
+    expect(await ent()).toBe(null); // no hire date, no general limit
+    await db.query("update profiles set hire_date = '2025-03-01' where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(8);
+    await db.query("update profiles set hire_date = '2023-06-01' where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(12);
+    await db.query("update profiles set hire_date = '2018-01-01' where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(16);
+    await db.query("update profiles set annual_leave_days = 20 where id = $1", [staff.profileId]);
+    expect(await ent()).toBe(20);
   });
 });

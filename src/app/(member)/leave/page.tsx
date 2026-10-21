@@ -3,7 +3,7 @@ import { ActionForm } from "@/components/form-state";
 import { LeaveApprovals, leaveDates } from "@/components/leave-approvals";
 import { Badge, Button, Card, Empty, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getLeavePolicies, getLeaveUsed, getSettings } from "@/lib/data";
+import { getLeaveBalances, getLeavePolicies, getSettings } from "@/lib/data";
 import { LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE, LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
 import { applyLeave, cancelLeave } from "@/lib/leave-actions";
 import type { LeaveRequest, LeaveType } from "@/lib/types";
@@ -15,11 +15,11 @@ export default async function LeavePage() {
   const settings = await getSettings(supabase);
   const today = todayIn(settings.timezone);
   const year = Number(today.slice(0, 4));
-  const [{ data }, policies, used] = await Promise.all([
+  const [{ data }, policies, balances] = await Promise.all([
     supabase.from("leave_requests").select("*")
       .eq("employee_id", profile.id).order("start_date", { ascending: false }).limit(50),
     getLeavePolicies(supabase),
-    getLeaveUsed(supabase, year, profile.id),
+    getLeaveBalances(supabase, year, profile.id),
   ]);
   const mine = (data ?? []) as LeaveRequest[];
   const types = (Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]).filter((t) => policies.get(t)?.is_active ?? true);
@@ -34,8 +34,9 @@ export default async function LeavePage() {
         <h2 className="px-4 pt-3 font-medium">Baki cuti {year}</h2>
         <ul className="divide-y divide-border">
           {types.map((t) => {
-            const limit = policies.get(t)?.annual_days;
-            const u = used.get(`${profile.id}:${t}`) ?? 0;
+            const b = balances.get(`${profile.id}:${t}`);
+            const limit = b?.limit_days;
+            const u = b?.used_days ?? 0;
             return (
               <li key={t} className="flex items-center justify-between px-4 py-2 text-sm">
                 <span>{LEAVE_TYPE_LABEL[t]}</span>
