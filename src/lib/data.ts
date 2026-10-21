@@ -16,6 +16,9 @@ export async function getSettings(supabase: SupabaseClient): Promise<Settings> {
       timezone: DEFAULT_TZ,
       work_days: [1, 2, 3, 4, 5],
       cycle_start_day: 1,
+      carry_forward_max_days: 5,
+      carry_forward_month: 3,
+      carry_forward_day: 1,
     }
   );
 }

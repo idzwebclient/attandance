@@ -55,6 +55,14 @@ export async function updateLeavePolicies(_prev: LeaveState, fd: FormData): Prom
   }
   const tiers = await saveAnnualTiers(supabase, fd);
   if (tiers.error) return tiers;
+  const carryDays = Number(String(fd.get("carry_forward_max_days") ?? "0") || 0);
+  const month = Number(fd.get("carry_forward_month"));
+  const day = Number(fd.get("carry_forward_day"));
+  if (!Number.isInteger(carryDays) || carryDays < 0 || carryDays > 366) return { error: "Hari bawaan tidak sah." };
+  if (!(month >= 1 && month <= 12 && day >= 1 && day <= 31)) return { error: "Tarikh tamat bawaan tidak sah." };
+  const { error: carryError } = await supabase.from("system_settings")
+    .update({ carry_forward_max_days: carryDays, carry_forward_month: month, carry_forward_day: day }).eq("id", 1);
+  if (carryError) return { error: "Simpan gagal. Cuba lagi." };
   revalidatePath("/", "layout");
   return { ok: "Polisi cuti disimpan." };
 }

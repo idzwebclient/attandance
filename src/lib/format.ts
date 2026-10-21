@@ -225,3 +225,5 @@ export function formatPeriod(month: string, startDay = 1) {
   const short = (d: string) => formatDate(d, { day: "numeric", month: "short" });
   return `${formatMonth(month)} (${short(from)} – ${short(to)})`;
 }
+
+export const MONTH_NAMES = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];

@@ -46,12 +46,16 @@ export async function LeaveApprovals({
       </div>
       <div className="text-sm">{LEAVE_TYPE_LABEL[r.leave_type]} · {leaveDates(r)}</div>
       {r.reason && <div className="text-xs text-muted">“{r.reason}”</div>}
-      {r.status === "PENDING" && balances.get(`${r.employee_id}:${r.leave_type}`)?.limit_days != null && (
-        <div className="text-xs text-muted">
-          Sudah guna {balances.get(`${r.employee_id}:${r.leave_type}`)?.used_days} / {balances.get(`${r.employee_id}:${r.leave_type}`)?.limit_days} hari
-          tahun ini (termasuk permohonan ini)
-        </div>
-      )}
+      {r.status === "PENDING" && (() => {
+        const b = balances.get(`${r.employee_id}:${r.leave_type}`);
+        if (!b || b.limit_days == null) return null;
+        return (
+          <div className="text-xs text-muted">
+            Sudah guna {b.used_days + b.carried_used} / {b.limit_days + b.carried_days} hari tahun ini
+            {b.carried_days > 0 && ` (termasuk ${b.carried_days} hari bawaan)`}, termasuk permohonan ini
+          </div>
+        );
+      })()}
     </div>
   );
 

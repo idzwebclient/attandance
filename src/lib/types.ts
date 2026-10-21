@@ -79,6 +79,9 @@ export type Settings = {
   timezone: string;
   work_days: number[];
   cycle_start_day: number;
+  carry_forward_max_days: number;
+  carry_forward_month: number;
+  carry_forward_day: number;
 };
 
 export type MonthlySummaryRow = {
@@ -146,7 +149,16 @@ export type LeaveType = "ANNUAL" | "SICK" | "EMERGENCY" | "UNPAID" | "OTHER";
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 export type LeavePolicy = { leave_type: LeaveType; is_active: boolean; annual_days: number | null };
-export type LeaveBalance = { employee_id: string; leave_type: LeaveType; limit_days: number | null; used_days: number };
+export type LeaveBalance = {
+  employee_id: string;
+  leave_type: LeaveType;
+  limit_days: number | null;
+  /** Days used from this year's entitlement (carried days excluded). */
+  used_days: number;
+  carried_days: number;
+  carried_used: number;
+  carry_expires: string;
+};
 
 export type LeaveRequest = {
   id: string;

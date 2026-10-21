@@ -4,7 +4,7 @@ import { LeaveApprovals } from "@/components/leave-approvals";
 import { Card, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getLeavePolicies, getSettings } from "@/lib/data";
-import { LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
+import { LEAVE_TYPE_LABEL, MONTH_NAMES, todayIn } from "@/lib/format";
 import { updateLeavePolicies } from "@/lib/leave-actions";
 import type { LeaveType } from "@/lib/types";
 
@@ -74,6 +74,19 @@ export default async function AdminLeave() {
                           </div>
                         );
                       })}
+                      <div className="flex flex-wrap items-center gap-1.5 border-t border-border bg-neutral-bg px-3 py-2">
+                        <span>Bawa ke tahun depan maksimum</span>
+                        <input type="number" name="carry_forward_max_days" min={0} max={366} defaultValue={settings.carry_forward_max_days}
+                          className={`${inputClass} !min-h-8 !w-16 !py-0.5`} />
+                        <span>hari, mesti guna sebelum</span>
+                        <select name="carry_forward_day" defaultValue={settings.carry_forward_day} className={`${inputClass} !min-h-8 !w-16 !py-0.5`}>
+                          {Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                        </select>
+                        <select name="carry_forward_month" defaultValue={settings.carry_forward_month} className={`${inputClass} !min-h-8 !w-20 !py-0.5`}>
+                          {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                        </select>
+                        <span className="w-full text-xs text-muted">0 hari = tiada bawaan. Baki bawaan yang tak diguna sebelum tarikh ini hangus.</span>
+                      </div>
                       <p className="border-t border-border px-3 py-1.5 text-xs text-muted">
                         Dikira dari tarikh tamat percubaan (atau tarikh mula kerja) di halaman pekerja. Tahun pertama diprorata ikut bulan perkhidmatan. Kosongkan baris untuk buang. Tiada cuti tahunan semasa percubaan.
                       </p>

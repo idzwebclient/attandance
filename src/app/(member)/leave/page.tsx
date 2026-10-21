@@ -35,7 +35,8 @@ export default async function LeavePage() {
         <ul className="divide-y divide-border">
           {types.map((t) => {
             const b = balances.get(`${profile.id}:${t}`);
-            const limit = b?.limit_days;
+            const carryLeft = b && today < b.carry_expires ? b.carried_days - b.carried_used : 0;
+            const limit = b?.limit_days == null ? null : b.limit_days + carryLeft;
             const u = b?.used_days ?? 0;
             return (
               <li key={t} className="flex items-center justify-between px-4 py-2 text-sm">
@@ -47,7 +48,14 @@ export default async function LeavePage() {
                     {t === "ANNUAL" ? "Belum ditetapkan" : u ? `Sudah guna ${u} hari` : "—"}
                   </span>
                 ) : (
-                  <span><b className={u >= limit ? "text-bad" : ""}>{Math.max(limit - u, 0)}</b> <span className="text-muted">/ {limit} hari tinggal</span></span>
+                  <span className="text-right">
+                    <b className={u >= limit ? "text-bad" : ""}>{Math.max(limit - u, 0)}</b> <span className="text-muted">/ {limit} hari tinggal</span>
+                    {carryLeft > 0 && b && (
+                      <span className="block text-xs text-muted">
+                        termasuk {carryLeft} hari bawaan, guna sebelum {formatDate(b.carry_expires, { day: "numeric", month: "short" })}
+                      </span>
+                    )}
+                  </span>
                 )}
               </li>
             );

@@ -130,4 +130,28 @@ describe("leave requests", () => {
     await db.query("update annual_leave_tiers set days = 14 where min_years = 0");
     expect(await ent(2026)).toBe(6);
   });
+
+  it("carries up to 5 unused annual days into next year, usable before 1 March", async () => {
+    // Full years of service; 12 days a year.
+    await db.query("update profiles set hire_date = '2025-01-01', probation_end_date = null where id = $1", [staff.profileId]);
+    const r = await apply(staff, "2025-03-03", "2025-03-07"); // 5 days used in 2025 -> 7 unused, carry 5
+    await decide(manager, r.id!, true);
+    const bal = async () => (await asUser<Record<string, unknown>>(db, staff.authId,
+      "select limit_days, used_days, carried_days, carried_used, carry_expires::text from leave_balances(2026) where leave_type = 'ANNUAL'"))[0];
+    expect(await bal()).toEqual({ limit_days: 12, used_days: 0, carried_days: 5, carried_used: 0, carry_expires: "2026-03-01" });
+    // February: 17 days allowed (12 + 5 carried).
+    expect(await apply(staff, "2026-02-02", "2026-02-25")).toMatchObject({ ok: false, code: "LIMIT" }); // 18 days
+    expect(await apply(staff, "2026-02-02", "2026-02-13")).toMatchObject({ ok: true }); // 10 days: 5 carried + 5
+    expect(await bal()).toMatchObject({ used_days: 5, carried_used: 5 });
+    // From March only this year's 7 remaining days.
+    expect(await apply(staff, "2026-03-02", "2026-03-11")).toMatchObject({ ok: false, code: "LIMIT" }); // 8 days
+    expect(await apply(staff, "2026-03-02", "2026-03-10")).toMatchObject({ ok: true }); // 7 days
+  });
+
+  it("lets carried days lapse after 1 March", async () => {
+    await db.query("update profiles set hire_date = '2025-01-01', probation_end_date = null where id = $1", [staff.profileId]);
+    // Nothing used in 2025: 5 carried into 2026, but only usable before 1 March.
+    expect(await apply(staff, "2026-03-02", "2026-03-18")).toMatchObject({ ok: false, code: "LIMIT" }); // 13 days
+    expect(await apply(staff, "2026-03-02", "2026-03-17")).toMatchObject({ ok: true }); // 12 days
+  });
 });
