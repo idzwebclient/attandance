@@ -6,6 +6,7 @@ import {
 import { formatRange, minutes, pickRange, quickRanges, todayIn } from "@/lib/format";
 import type { Settings } from "@/lib/types";
 import { AttendanceTable } from "./attendance-table";
+import { BranchSummary } from "./branch-summary";
 import { Icon, type IconName } from "./icons";
 import { RangeFilter } from "./range-filter";
 import { SummaryList } from "./summary-list";
@@ -33,7 +34,14 @@ export async function ReportsView({
   const today = todayIn(tz);
   const { from, to } = pickRange(search.from, search.to, today, settings.cycle_start_day);
   const branchId = fixedBranchId ?? (typeof search.branch === "string" && search.branch ? search.branch : null);
-  const tab = search.tab === "daily" ? "daily" : "summary";
+  // Admins viewing every branch start from the branch overview.
+  const allBranches = !fixedBranchId && !branchId;
+  const tabs = [
+    ...(allBranches ? [["branch", "Ikut cawangan"] as const] : []),
+    ["summary", "Ikut pekerja"] as const,
+    ["daily", "Ikut hari"] as const,
+  ];
+  const tab = tabs.find(([k]) => k === search.tab)?.[0] ?? tabs[0][0];
   const branchParam: Record<string, string> = branchId && !fixedBranchId ? { branch: branchId } : {};
   const href = (extra: Record<string, string>) =>
     `${basePath}?${new URLSearchParams({ from, to, tab, ...branchParam, ...extra })}`;
@@ -96,14 +104,14 @@ export async function ReportsView({
         />
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-7">
         {totals.map((t) => (
           <Card key={t.label} className={`!p-3 ${t.bad && t.value > 0 ? "!border-bad/30 !bg-bad-bg" : ""}`}>
             <div className="flex items-center gap-1.5 text-xs text-muted">
               <Icon name={t.icon} className="h-3.5 w-3.5" />
               {t.label}
             </div>
-            <div className={`text-2xl font-bold tabular-nums ${t.bad && t.value > 0 ? "text-bad" : ""}`}>{t.value}</div>
+            <div className={`text-xl font-bold tabular-nums sm:text-2xl ${t.bad && t.value > 0 ? "text-bad" : ""}`}>{t.value}</div>
             {t.note && t.value > 0 && <div className="text-xs text-muted">{t.note}</div>}
           </Card>
         ))}
@@ -111,7 +119,7 @@ export async function ReportsView({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-xl bg-neutral-bg p-1 text-sm font-medium">
-          {([["summary", "Ikut pekerja"], ["daily", "Ikut hari"]] as const).map(([key, label]) => (
+          {tabs.map(([key, label]) => (
             <Link
               key={key}
               href={href({ tab: key })}
@@ -127,7 +135,9 @@ export async function ReportsView({
         </a>
       </div>
 
-      {tab === "summary" ? (
+      {tab === "branch" ? (
+        <BranchSummary rows={summary} branchHref={(id) => href({ branch: id, tab: "summary" })} />
+      ) : tab === "summary" ? (
         <SummaryList rows={summary} showBranch={!branchId} hrefBase={employeeHref("")} />
       ) : (
         <AttendanceTable
