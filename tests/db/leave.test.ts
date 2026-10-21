@@ -112,4 +112,22 @@ describe("leave requests", () => {
     expect(await apply(staff, "2026-09-28", "2026-09-28", "SICK")).toMatchObject({ ok: true });
     expect(await apply(staff, "2026-10-01", "2026-10-01")).toMatchObject({ ok: true });
   });
+
+  it("prorates annual leave in the first year of service", async () => {
+    const ent = async (year: number) => (await db.query<{ n: number | null }>(
+      "select app.leave_entitlement($1, 'ANNUAL', $2) as n", [staff.profileId, year])).rows[0].n;
+    // Probation ends 1 Jul 2026: 6 months of 12 days = 6.
+    await db.query("update profiles set hire_date = '2026-04-01', probation_end_date = '2026-07-01' where id = $1", [staff.profileId]);
+    expect(await ent(2026)).toBe(6);
+    expect(await ent(2027)).toBe(12);
+    expect(await ent(2025)).toBe(0);
+    // 15 Oct: 2 completed months, 12 x 2 / 12 = 2.
+    await db.query("update profiles set probation_end_date = '2026-10-15' where id = $1", [staff.profileId]);
+    expect(await ent(2026)).toBe(2);
+    // 1 Aug: 5 months, 12 x 5 / 12 = 5; with 14 days tier-0: 5.83 rounds to 6.
+    await db.query("update profiles set probation_end_date = '2026-08-01' where id = $1", [staff.profileId]);
+    expect(await ent(2026)).toBe(5);
+    await db.query("update annual_leave_tiers set days = 14 where min_years = 0");
+    expect(await ent(2026)).toBe(6);
+  });
 });
