@@ -1,6 +1,6 @@
 import { AttendanceTable } from "@/components/attendance-table";
 import { BoardStats } from "@/components/board-stats";
-import { buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getSettings } from "@/lib/data";
+import { buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getOnLeave, getSettings } from "@/lib/data";
 import { todayIn } from "@/lib/format";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -9,12 +9,13 @@ export async function BranchBoard({ supabase, branchId, date }: { supabase: Supa
   const settings = await getSettings(supabase);
   const today = todayIn(settings.timezone);
   const day = date ?? today;
-  const [employees, reports, branchNames] = await Promise.all([
+  const [employees, reports, branchNames, onLeave] = await Promise.all([
     getActiveEmployees(supabase, branchId),
     getDayReports(supabase, { from: day, to: day, branchId }),
     getBranchNames(supabase),
+    getOnLeave(supabase, day),
   ]);
-  const rows = buildDayBoard(employees, reports, day, branchNames);
+  const rows = buildDayBoard(employees, reports, day, branchNames, onLeave);
   return (
     <>
       <BoardStats counts={countBoard(rows)} past={day < today} />

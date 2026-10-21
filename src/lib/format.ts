@@ -4,6 +4,8 @@ import type {
   CompletionStatus,
   DepartureStatus,
   EventType,
+  LeaveStatus,
+  LeaveType,
 } from "./types";
 
 export const DEFAULT_TZ = "Asia/Kuala_Lumpur";
@@ -67,6 +69,28 @@ export const DEPARTURE_TONE: Record<DepartureStatus, Tone> = {
   EARLY_DEPARTURE: "bad",
   COMPLETE: "good",
   NOT_PUNCHED_OUT: "warn",
+};
+
+export const LEAVE_TYPE_LABEL: Record<LeaveType, string> = {
+  ANNUAL: "Cuti tahunan",
+  SICK: "Cuti sakit",
+  EMERGENCY: "Cuti kecemasan",
+  UNPAID: "Cuti tanpa gaji",
+  OTHER: "Lain-lain",
+};
+
+export const LEAVE_STATUS_LABEL: Record<LeaveStatus, string> = {
+  PENDING: "Menunggu kelulusan",
+  APPROVED: "Diluluskan",
+  REJECTED: "Ditolak",
+  CANCELLED: "Dibatalkan",
+};
+
+export const LEAVE_STATUS_TONE: Record<LeaveStatus, Tone> = {
+  PENDING: "warn",
+  APPROVED: "good",
+  REJECTED: "bad",
+  CANCELLED: "neutral",
 };
 
 export function formatTime(iso: string | null | undefined, tz = DEFAULT_TZ) {

@@ -32,7 +32,9 @@ export function AttendanceTable({
   const list: ListRow[] = rows.map((r) => {
     const absent = !!r.missing && !!today && r.attendance_date < today;
     const status: { label: string; tone: Tone; group: ListRow["group"] } = r.missing
-      ? absent
+      ? r.on_leave
+        ? { label: "Cuti", tone: "info", group: "leave" }
+        : absent
         ? { label: "Tidak hadir", tone: "bad", group: "absent" }
         : { label: "Belum masuk", tone: "neutral", group: "notIn" }
       : r.extra_open

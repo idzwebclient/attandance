@@ -5,6 +5,7 @@ export function BoardStats({ counts, past }: { counts: ReturnType<typeof countBo
   const items = [
     { label: "Pekerja", value: counts.total },
     { label: past ? "Tidak hadir" : "Belum masuk", value: counts.notIn, bad: past },
+    { label: "Cuti", value: counts.onLeave },
     { label: "Lewat", value: counts.late, bad: true },
     { label: "Sedang bekerja", value: counts.working },
     { label: "Sedang rehat", value: counts.onBreak },

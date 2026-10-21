@@ -6,7 +6,7 @@ import { DateInput, FilterBar, FilterField, MonthInput, SelectInput } from "@/co
 import { buttonClass, PageTitle } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import {
-  buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getMonthReports, getSettings, pickMonth,
+  buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getOnLeave, getMonthReports, getSettings, pickMonth,
 } from "@/lib/data";
 import { formatDate, formatPeriod, isDate, todayIn } from "@/lib/format";
 
@@ -30,8 +30,11 @@ export default async function AdminAttendance({ searchParams }: PageProps<"/admi
 
   let content;
   if (view === "day") {
-    const reports = await getDayReports(supabase, { from: date, to: date, branchId, employeeId });
-    const board = buildDayBoard(employees, reports, date, branchNames);
+    const [reports, onLeave] = await Promise.all([
+      getDayReports(supabase, { from: date, to: date, branchId, employeeId }),
+      getOnLeave(supabase, date),
+    ]);
+    const board = buildDayBoard(employees, reports, date, branchNames, onLeave);
     content = (
       <>
         <BoardStats counts={countBoard(board)} past={date < today} />

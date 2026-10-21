@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BoardStats } from "@/components/board-stats";
 import { Card, PageTitle, Table } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getSettings } from "@/lib/data";
+import { buildDayBoard, countBoard, getActiveEmployees, getBranchNames, getDayReports, getOnLeave, getSettings } from "@/lib/data";
 import { formatDate, todayIn } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard admin" };
@@ -12,12 +12,13 @@ export default async function AdminDashboard() {
   const { supabase } = await requireRole("admin");
   const settings = await getSettings(supabase);
   const today = todayIn(settings.timezone);
-  const [employees, reports, branchNames] = await Promise.all([
+  const [employees, reports, branchNames, onLeave] = await Promise.all([
     getActiveEmployees(supabase),
     getDayReports(supabase, { from: today, to: today }),
     getBranchNames(supabase),
+    getOnLeave(supabase, today),
   ]);
-  const board = buildDayBoard(employees, reports, today, branchNames);
+  const board = buildDayBoard(employees, reports, today, branchNames, onLeave);
   const perBranch = [...branchNames].map(([id, name]) => ({
     id,
     name,

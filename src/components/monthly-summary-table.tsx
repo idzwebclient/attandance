@@ -8,6 +8,7 @@ export const SUMMARY_COLUMNS: { key: keyof MonthlySummaryRow; label: string; min
   { key: "completed_days", label: "Lengkap" },
   { key: "incomplete_days", label: "Tak lengkap", bad: true },
   { key: "absent_days", label: "Tidak hadir", bad: true },
+  { key: "leave_days", label: "Cuti" },
   { key: "early_arrivals", label: "Awal" },
   { key: "on_time_arrivals", label: "Tepat masa" },
   { key: "late_arrivals", label: "Lewat", bad: true },

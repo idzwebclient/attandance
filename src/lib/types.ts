@@ -99,6 +99,7 @@ export type MonthlySummaryRow = {
   extra_sessions: number;
   total_extra_minutes: number;
   field_work_days: number;
+  leave_days: number;
 };
 
 export type AttendanceContext =
@@ -136,4 +137,22 @@ export type SubmitResult =
   | Failure;
 
 // A row with `missing` set is an employee with no attendance that day.
-export type BoardRow = AttendanceDayReport & { missing?: boolean };
+export type BoardRow = AttendanceDayReport & { missing?: boolean; on_leave?: boolean };
+
+export type LeaveType = "ANNUAL" | "SICK" | "EMERGENCY" | "UNPAID" | "OTHER";
+export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+export type LeaveRequest = {
+  id: string;
+  employee_id: string;
+  branch_id: string | null;
+  leave_type: LeaveType;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+  status: LeaveStatus;
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
+  created_at: string;
+};

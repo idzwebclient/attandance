@@ -4,6 +4,7 @@ import type { Role } from "./types";
 export const STAFF_NAV: NavItem[] = [
   { href: "/attendance", label: "Punch", icon: "home" },
   { href: "/history", label: "Sejarah", icon: "history" },
+  { href: "/leave", label: "Cuti", icon: "calendar" },
   { href: "/account", label: "Akaun", icon: "user" },
 ];
 
@@ -12,6 +13,7 @@ export const MANAGER_NAV: NavItem[] = [
   { href: "/attendance", label: "Punch", icon: "home" },
   { href: "/manager", label: "Pasukan", icon: "users" },
   { href: "/manager/reports", label: "Laporan", icon: "chart" },
+  { href: "/leave", label: "Cuti", icon: "calendar" },
   { href: "/history", label: "Sejarah", icon: "history" },
   { href: "/account", label: "Akaun", icon: "user" },
 ];
@@ -22,6 +24,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/employees", label: "Pekerja", icon: "users" },
   { href: "/admin/managers", label: "Manager", icon: "badge" },
   { href: "/admin/field-work", label: "Kerja luar", icon: "pin" },
+  { href: "/admin/leave", label: "Cuti", icon: "calendar" },
   { href: "/admin/branches", label: "Cawangan", icon: "building" },
   { href: "/admin/reports", label: "Laporan", icon: "chart" },
   { href: "/admin/settings", label: "Tetapan", icon: "settings" },

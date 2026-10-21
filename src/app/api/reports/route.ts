@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { toCsv } from "@/lib/csv";
 import {
-  buildDayBoard, getActiveEmployees, getBranchNames, getDayReports, getRangeSummary, getSettings,
+  buildDayBoard, getActiveEmployees, getBranchNames, getDayReports, getOnLeave, getRangeSummary, getSettings,
 } from "@/lib/data";
 import {
   ARRIVAL_LABEL, BREAK_LABEL, COMPLETION_LABEL, DEPARTURE_LABEL, formatTime, pickRange, todayIn,
@@ -27,12 +27,13 @@ export async function GET(request: Request) {
   let filename: string;
   let csv: string;
   if (url.searchParams.get("type") === "daily") {
-    const [reports, branchNames, employees] = await Promise.all([
+    const [reports, branchNames, employees, onLeave] = await Promise.all([
       getDayReports(supabase, { from, to, branchId: branchId ?? undefined }),
       getBranchNames(supabase),
       from === to ? getActiveEmployees(supabase, branchId) : Promise.resolve([]),
+      from === to ? getOnLeave(supabase, from) : Promise.resolve(new Set<string>()),
     ]);
-    const rows: BoardRow[] = from === to ? buildDayBoard(employees, reports, from, branchNames) : [...reports].reverse();
+    const rows: BoardRow[] = from === to ? buildDayBoard(employees, reports, from, branchNames, onLeave) : [...reports].reverse();
     filename = `kehadiran-harian-${span}.csv`;
     csv = toCsv(
       ["Tarikh", "Cawangan", "No. pekerja", "Nama", "Masuk", "Status ketibaan", "Minit lewat", "Minit awal",
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
         r.early_departure_minutes,
         r.extra_minutes,
         r.is_field_work ? "Ya" : "",
-        r.missing ? (r.attendance_date < today ? "Tidak hadir" : "Belum masuk")
+        r.missing ? (r.on_leave ? "Cuti" : r.attendance_date < today ? "Tidak hadir" : "Belum masuk")
           : `${COMPLETION_LABEL[r.effective_status]}${r.break_status ? ` / Rehat: ${BREAK_LABEL[r.break_status]}` : ""}`,
       ]),
     );

@@ -69,12 +69,14 @@ export function buildDayBoard(
   reports: AttendanceDayReport[],
   date: string,
   branchNames: Map<string, string>,
+  onLeave: Set<string> = new Set(),
 ) {
   const byEmployee = new Map(reports.map((r) => [r.employee_id, r]));
   const rows: BoardRow[] = employees.map((e) =>
     byEmployee.get(e.id) ?? {
       id: `missing-${e.id}`,
       missing: true,
+      on_leave: onLeave.has(e.id),
       employee_id: e.id,
       branch_id: e.branch_id ?? "",
       attendance_date: date,
@@ -106,10 +108,11 @@ export function buildDayBoard(
   return rows.sort((a, b) => a.full_name.localeCompare(b.full_name));
 }
 
-export function countBoard(rows: { missing?: boolean; effective_status: string; arrival_status: string | null; break_status: string | null; departure_status: string | null; work_out_at: string | null }[]) {
+export function countBoard(rows: { missing?: boolean; on_leave?: boolean; effective_status: string; arrival_status: string | null; break_status: string | null; departure_status: string | null; work_out_at: string | null }[]) {
   return {
     total: rows.length,
-    notIn: rows.filter((r) => r.missing).length,
+    notIn: rows.filter((r) => r.missing && !r.on_leave).length,
+    onLeave: rows.filter((r) => r.missing && r.on_leave).length,
     late: rows.filter((r) => r.arrival_status === "LATE").length,
     onBreak: rows.filter((r) => r.effective_status === "ON_BREAK").length,
     working: rows.filter((r) => r.effective_status === "WORKING" || r.effective_status === "RETURNED_FROM_BREAK").length,
@@ -150,4 +153,11 @@ export async function getRangeSummary(
   });
   if (error) throw new Error(error.message);
   return (data ?? []) as MonthlySummaryRow[];
+}
+
+// Employees with approved leave covering a date (RLS limits managers to their branch).
+export async function getOnLeave(supabase: SupabaseClient, date: string) {
+  const { data } = await supabase.from("leave_requests").select("employee_id")
+    .eq("status", "APPROVED").lte("start_date", date).gte("end_date", date);
+  return new Set((data ?? []).map((r) => r.employee_id as string));
 }

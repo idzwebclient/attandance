@@ -14,7 +14,7 @@ export type ListRow = {
   dayHref: string | null;
   dayLabel: string;
   status: { label: string; tone: Tone };
-  group: "notIn" | "absent" | "working" | "break" | "done" | "issue";
+  group: "notIn" | "absent" | "leave" | "working" | "break" | "done" | "issue";
   missing: boolean;
   workIn: string;
   breakOut: string;
@@ -32,6 +32,7 @@ const GROUPS: { key: "all" | ListRow["group"]; label: string }[] = [
   { key: "issue", label: "Ada masalah" },
   { key: "notIn", label: "Belum masuk" },
   { key: "absent", label: "Tidak hadir" },
+  { key: "leave", label: "Cuti" },
   { key: "working", label: "Bekerja" },
   { key: "break", label: "Rehat" },
   { key: "done", label: "Selesai" },

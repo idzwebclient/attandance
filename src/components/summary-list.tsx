@@ -20,6 +20,7 @@ function Count({ n, mins, bad = true }: { n: number; mins?: number; bad?: boolea
 const COLS = [
   { label: "Hadir", get: (r: MonthlySummaryRow) => <Count n={r.recorded_days} bad={false} /> },
   { label: "Tidak hadir", get: (r: MonthlySummaryRow) => <Count n={r.absent_days} /> },
+  { label: "Cuti", get: (r: MonthlySummaryRow) => <Count n={r.leave_days} bad={false} /> },
   { label: "Lewat", get: (r: MonthlySummaryRow) => <Count n={r.late_arrivals} mins={r.total_late_minutes} /> },
   { label: "Rehat lebih", get: (r: MonthlySummaryRow) => <Count n={r.excess_breaks} mins={r.total_excess_break_minutes} /> },
   { label: "Balik awal", get: (r: MonthlySummaryRow) => <Count n={r.early_departures} mins={r.total_early_departure_minutes} /> },

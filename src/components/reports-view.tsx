@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  buildDayBoard, getActiveEmployees, getBranchNames, getDayReports, getRangeSummary,
+  buildDayBoard, getActiveEmployees, getBranchNames, getDayReports, getOnLeave, getRangeSummary,
 } from "@/lib/data";
 import { formatRange, minutes, pickRange, quickRanges, todayIn } from "@/lib/format";
 import type { Settings } from "@/lib/types";
@@ -40,18 +40,20 @@ export async function ReportsView({
   const csv = (type: string) => `/api/reports?${new URLSearchParams({ type, from, to, ...branchParam })}`;
   const singleDay = from === to;
 
-  const [branchNames, summary, reports, employees] = await Promise.all([
+  const [branchNames, summary, reports, employees, onLeave] = await Promise.all([
     getBranchNames(supabase),
     getRangeSummary(supabase, { from, to }, { branchId }),
     tab === "daily" ? getDayReports(supabase, { from, to, branchId: branchId ?? undefined }) : Promise.resolve([]),
     tab === "daily" && singleDay ? getActiveEmployees(supabase, branchId) : Promise.resolve([]),
+    tab === "daily" && singleDay ? getOnLeave(supabase, from) : Promise.resolve(new Set<string>()),
   ]);
-  const dayRows = tab === "daily" && singleDay ? buildDayBoard(employees, reports, from, branchNames) : reports;
+  const dayRows = tab === "daily" && singleDay ? buildDayBoard(employees, reports, from, branchNames, onLeave) : reports;
 
   const sum = (k: keyof (typeof summary)[number]) => summary.reduce((n, r) => n + (r[k] as number), 0);
   const totals: { label: string; value: number; note?: string; icon: IconName; bad?: boolean }[] = [
     { label: "Hari hadir", value: sum("recorded_days"), icon: "check" },
     { label: "Tidak hadir", value: sum("absent_days"), icon: "user", bad: true },
+    { label: "Cuti", value: sum("leave_days"), icon: "calendar" },
     { label: "Lewat", value: sum("late_arrivals"), note: minutes(sum("total_late_minutes")), icon: "clock", bad: true },
     { label: "Rehat lebih", value: sum("excess_breaks"), note: minutes(sum("total_excess_break_minutes")), icon: "coffee", bad: true },
     { label: "Balik awal", value: sum("early_departures"), note: minutes(sum("total_early_departure_minutes")), icon: "logout", bad: true },
