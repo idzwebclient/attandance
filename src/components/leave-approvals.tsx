@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getLeavePolicies, getLeaveUsed } from "@/lib/data";
 import { addDays, formatDate, LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE, LEAVE_TYPE_LABEL } from "@/lib/format";
 import { decideLeave } from "@/lib/leave-actions";
 import type { LeaveRequest } from "@/lib/types";
@@ -23,11 +24,11 @@ export async function LeaveApprovals({
   excludeEmployeeId?: string;
   staffOnly?: boolean;
 }) {
-  const { data } = await supabase.from("leave_requests")
+  const [{ data }, policies, used] = await Promise.all([supabase.from("leave_requests")
     .select("*, employee:profiles!leave_requests_employee_id_fkey(full_name, employee_code, role), branch:branches(name)")
     .or(`status.eq.PENDING,end_date.gte.${addDays(today, -30)}`)
     .order("start_date")
-    .limit(300);
+    .limit(300), getLeavePolicies(supabase), getLeaveUsed(supabase, Number(today.slice(0, 4)))]);
   type Row = LeaveRequest & {
     employee: { full_name: string; employee_code: string; role: string } | null;
     branch: { name: string } | null;
@@ -45,6 +46,11 @@ export async function LeaveApprovals({
       </div>
       <div className="text-sm">{LEAVE_TYPE_LABEL[r.leave_type]} · {leaveDates(r)}</div>
       {r.reason && <div className="text-xs text-muted">“{r.reason}”</div>}
+      {r.status === "PENDING" && policies.get(r.leave_type)?.annual_days != null && (
+        <div className="text-xs text-muted">
+          Sudah guna {used.get(`${r.employee_id}:${r.leave_type}`) ?? 0} / {policies.get(r.leave_type)?.annual_days} hari tahun ini (termasuk permohonan ini)
+        </div>
+      )}
     </div>
   );
 

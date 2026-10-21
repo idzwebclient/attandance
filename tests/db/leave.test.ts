@@ -70,4 +70,21 @@ describe("leave requests", () => {
       "select absent_days, leave_days from attendance_summary('2026-09-07', '2026-09-11') where employee_code = 'S001'");
     expect(rows[0]).toEqual({ absent_days: 3, leave_days: 2 });
   });
+
+  it("enforces the admin's yearly limit and disabled types", async () => {
+    await db.query("update leave_policies set annual_days = 3 where leave_type = 'ANNUAL'");
+    await db.query("update leave_policies set is_active = false where leave_type = 'UNPAID'");
+    expect(await apply(staff, "2026-09-07", "2026-09-07", "UNPAID")).toMatchObject({ ok: false, code: "TYPE_DISABLED" });
+    expect(await apply(staff, "2026-09-12", "2026-09-13")).toMatchObject({ ok: false, code: "NO_WORK_DAYS" });
+    // Fri 4 - Mon 7 Sep: 2 work days (weekend skipped).
+    expect(await apply(staff, "2026-09-04", "2026-09-07")).toMatchObject({ ok: true });
+    const over = await apply(staff, "2026-09-14", "2026-09-15");
+    expect(over).toMatchObject({ ok: false, code: "LIMIT" });
+    expect(await apply(staff, "2026-09-14", "2026-09-14")).toMatchObject({ ok: true });
+    // Sick leave has no limit.
+    expect(await apply(staff, "2026-10-05", "2026-10-09", "SICK")).toMatchObject({ ok: true });
+    const bal = await asUser<{ leave_type: string; used_days: number }>(db, staff.authId,
+      "select leave_type, used_days from leave_balances(2026) order by leave_type");
+    expect(bal).toEqual([{ leave_type: "ANNUAL", used_days: 3 }, { leave_type: "SICK", used_days: 5 }]);
+  });
 });

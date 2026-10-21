@@ -3,7 +3,7 @@ import { ActionForm } from "@/components/form-state";
 import { LeaveApprovals, leaveDates } from "@/components/leave-approvals";
 import { Badge, Button, Card, Empty, Field, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getSettings } from "@/lib/data";
+import { getLeavePolicies, getLeaveUsed, getSettings } from "@/lib/data";
 import { LEAVE_STATUS_LABEL, LEAVE_STATUS_TONE, LEAVE_TYPE_LABEL, todayIn } from "@/lib/format";
 import { applyLeave, cancelLeave } from "@/lib/leave-actions";
 import type { LeaveRequest, LeaveType } from "@/lib/types";
@@ -14,9 +14,15 @@ export default async function LeavePage() {
   const { supabase, profile } = await requireRole("staff", "manager");
   const settings = await getSettings(supabase);
   const today = todayIn(settings.timezone);
-  const { data } = await supabase.from("leave_requests").select("*")
-    .eq("employee_id", profile.id).order("start_date", { ascending: false }).limit(50);
+  const year = Number(today.slice(0, 4));
+  const [{ data }, policies, used] = await Promise.all([
+    supabase.from("leave_requests").select("*")
+      .eq("employee_id", profile.id).order("start_date", { ascending: false }).limit(50),
+    getLeavePolicies(supabase),
+    getLeaveUsed(supabase, year, profile.id),
+  ]);
   const mine = (data ?? []) as LeaveRequest[];
+  const types = (Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]).filter((t) => policies.get(t)?.is_active ?? true);
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -24,12 +30,32 @@ export default async function LeavePage() {
         title="Cuti"
         subtitle={profile.role === "manager" ? "Permohonan anda diluluskan oleh admin." : "Permohonan diluluskan oleh manager cawangan atau admin."}
       />
+      <Card className="!p-0">
+        <h2 className="px-4 pt-3 font-medium">Baki cuti {year}</h2>
+        <ul className="divide-y divide-border">
+          {types.map((t) => {
+            const limit = policies.get(t)?.annual_days;
+            const u = used.get(`${profile.id}:${t}`) ?? 0;
+            return (
+              <li key={t} className="flex items-center justify-between px-4 py-2 text-sm">
+                <span>{LEAVE_TYPE_LABEL[t]}</span>
+                {limit == null ? (
+                  <span className="text-muted">Guna {u} hari · tiada had</span>
+                ) : (
+                  <span><b className={u >= limit ? "text-bad" : ""}>{Math.max(limit - u, 0)}</b> <span className="text-muted">/ {limit} hari tinggal</span></span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+
       <Card>
         <h2 className="mb-3 font-medium">Mohon cuti</h2>
         <ActionForm action={applyLeave} submitLabel="Hantar permohonan">
           <Field label="Jenis cuti">
-            <select name="leave_type" defaultValue="ANNUAL" className={inputClass}>
-              {(Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]).map((t) => (
+            <select name="leave_type" defaultValue={types[0]} className={inputClass}>
+              {types.map((t) => (
                 <option key={t} value={t}>{LEAVE_TYPE_LABEL[t]}</option>
               ))}
             </select>

@@ -142,6 +142,9 @@ export type BoardRow = AttendanceDayReport & { missing?: boolean; on_leave?: boo
 export type LeaveType = "ANNUAL" | "SICK" | "EMERGENCY" | "UNPAID" | "OTHER";
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
+export type LeavePolicy = { leave_type: LeaveType; is_active: boolean; annual_days: number | null };
+export type LeaveBalance = { employee_id: string; leave_type: LeaveType; used_days: number };
+
 export type LeaveRequest = {
   id: string;
   employee_id: string;

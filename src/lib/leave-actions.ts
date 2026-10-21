@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "./auth";
+import { LEAVE_TYPE_LABEL } from "./format";
+import type { LeaveType } from "./types";
 
 export type LeaveState = { error?: string; ok?: string };
 
@@ -36,4 +38,21 @@ export async function decideLeave(fd: FormData) {
     p_note: String(fd.get("note") ?? ""),
   });
   revalidatePath("/", "layout");
+}
+
+export async function updateLeavePolicies(_prev: LeaveState, fd: FormData): Promise<LeaveState> {
+  const { supabase } = await requireRole("admin");
+  for (const type of Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]) {
+    const raw = String(fd.get(`days_${type}`) ?? "").trim();
+    const days = raw === "" ? null : Number(raw);
+    if (days != null && (!Number.isInteger(days) || days < 0 || days > 366)) {
+      return { error: `Had hari untuk ${LEAVE_TYPE_LABEL[type]} tidak sah.` };
+    }
+    const { error } = await supabase.from("leave_policies")
+      .update({ annual_days: days, is_active: fd.get(`active_${type}`) === "on", updated_at: new Date().toISOString() })
+      .eq("leave_type", type);
+    if (error) return { error: "Simpan gagal. Cuba lagi." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: "Polisi cuti disimpan." };
 }
