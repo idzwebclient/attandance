@@ -33,8 +33,8 @@ export default async function AdminDashboard() {
         <Table>
           <thead>
             <tr>
-              <th>Cawangan</th><th>Pekerja</th><th>Belum masuk</th><th>Lewat</th><th>Sedang rehat</th>
-              <th>Rehat lebih</th><th>Selesai</th><th />
+              <th>Cawangan</th><th>Pekerja</th><th>Belum masuk</th><th>Cuti</th><th>Sedang bekerja</th>
+              <th>Sedang rehat</th><th>Lewat</th><th>Rehat lebih</th><th>Selesai</th><th />
             </tr>
           </thead>
           <tbody>
@@ -43,8 +43,10 @@ export default async function AdminDashboard() {
                 <td className="font-medium">{b.name}</td>
                 <td>{b.counts.total}</td>
                 <td>{b.counts.notIn}</td>
-                <td className={b.counts.late ? "text-bad font-medium" : ""}>{b.counts.late}</td>
+                <td>{b.counts.onLeave}</td>
+                <td>{b.counts.working}</td>
                 <td>{b.counts.onBreak}</td>
+                <td className={b.counts.late ? "text-bad font-medium" : ""}>{b.counts.late}</td>
                 <td className={b.counts.exceeded ? "text-bad font-medium" : ""}>{b.counts.exceeded}</td>
                 <td>{b.counts.completed}</td>
                 <td><Link className="text-brand hover:underline" href={`/admin/attendance?branch=${b.id}&date=${today}`}>Lihat</Link></td>

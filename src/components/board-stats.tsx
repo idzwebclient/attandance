@@ -15,7 +15,7 @@ export function BoardStats({ counts, past }: { counts: ReturnType<typeof countBo
     ...(past ? [{ label: "Tidak lengkap", value: counts.incomplete, bad: true }] : []),
   ];
   return (
-    <div className="mb-4 grid grid-cols-4 gap-2 sm:gap-3 lg:grid-cols-8">
+    <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:grid-cols-9">
       {items.map((i) => (
         <Card key={i.label} className={`!p-2 sm:!p-3 ${i.bad && i.value > 0 ? "!border-bad/30 !bg-bad-bg" : ""}`}>
           <div className="truncate text-[10px] leading-tight text-muted sm:text-xs">{i.label}</div>
