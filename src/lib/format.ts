@@ -227,3 +227,17 @@ export function formatPeriod(month: string, startDay = 1) {
 }
 
 export const MONTH_NAMES = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+
+// One phone format: 012-345 6789, 011-2345 6789, 03-1234 5678, 04-123 4567.
+// +60 / 60 become 0; anything unrecognised is returned as typed (trimmed).
+// Mirrors app.format_phone in the database.
+export function formatPhone(raw: string) {
+  let d = raw.replace(/\D/g, "");
+  if (!d) return null;
+  if (d.startsWith("60") && d.length >= 11 && d.length <= 12) d = d.slice(1);
+  if (d.startsWith("01") && d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)} ${d.slice(7)}`;
+  if (d.startsWith("01") && d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)} ${d.slice(6)}`;
+  if (d.startsWith("0") && d.length === 10) return `${d.slice(0, 2)}-${d.slice(2, 6)} ${d.slice(6)}`;
+  if (d.startsWith("0") && d.length === 9) return `${d.slice(0, 2)}-${d.slice(2, 5)} ${d.slice(5)}`;
+  return raw.trim();
+}

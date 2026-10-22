@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime, minutes, monthRange, parseQrPayload, qrPayload } from "@/lib/format";
+import { formatPhone, formatTime, minutes, monthRange, parseQrPayload, qrPayload } from "@/lib/format";
 
 describe("format helpers", () => {
   it("shows times in Malaysia time", () => {
@@ -68,5 +68,17 @@ describe("quick ranges with a 25th cycle", () => {
     expect(r["Bulan ini"]).toEqual(["2026-09-25", "2026-10-05"]);
     expect(r["Bulan lepas"]).toEqual(["2026-08-25", "2026-09-24"]);
     expect(pickRange(undefined, undefined, "2026-10-26", 25)).toEqual({ from: "2026-10-25", to: "2026-10-26" });
+  });
+});
+
+describe("formatPhone", () => {
+  it("standardises Malaysian numbers", () => {
+    expect(formatPhone("0123456789")).toBe("012-345 6789");
+    expect(formatPhone("+60 12-345 6789")).toBe("012-345 6789");
+    expect(formatPhone("601123456789")).toBe("011-2345 6789");
+    expect(formatPhone("03 1234 5678")).toBe("03-1234 5678");
+    expect(formatPhone("047331234")).toBe("04-733 1234");
+    expect(formatPhone("")).toBe(null);
+    expect(formatPhone("123")).toBe("123");
   });
 });

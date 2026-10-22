@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
-import { tzOffset } from "@/lib/format";
+import { formatPhone, tzOffset } from "@/lib/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type FormState = { error?: string; ok?: string };
@@ -26,7 +26,7 @@ const profileFields = z.object({
   role,
   branch_id: z.uuid("Cawangan tidak sah.").nullable(),
   qr_exempt: z.boolean(),
-  phone: z.string().regex(/^\+?[0-9 -]{8,20}$/, "No. telefon tidak sah.").nullable(),
+  phone: z.string().regex(/^0\d{1,2}-\d{3,4} \d{4}$/, "No. telefon tidak sah. Contoh: 012-345 6789").nullable(),
   ic_number: z.string().regex(/^\d{6}-\d{2}-\d{4}$/, "No. IC mesti 12 digit, contoh 900101-02-1234.").nullable(),
   hire_date: z.iso.date("Tarikh mula kerja tidak sah.").nullable(),
   probation_end_date: z.iso.date("Tarikh tamat percubaan tidak sah.").nullable(),
@@ -41,7 +41,7 @@ function readProfile(fd: FormData, employeeCode = str(fd, "employee_code")) {
     branch_id: optional(fd, "branch_id"),
     // Only managers can punch without QR.
     qr_exempt: str(fd, "role") === "manager" && str(fd, "qr_exempt") === "true",
-    phone: optional(fd, "phone"),
+    phone: formatPhone(str(fd, "phone")),
     ic_number: formatIc(str(fd, "ic_number")),
     hire_date: optional(fd, "hire_date"),
     probation_end_date: optional(fd, "probation_end_date"),

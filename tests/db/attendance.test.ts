@@ -481,3 +481,14 @@ describe("field work (kerja luar)", () => {
     expect((await punch(db, staff.authId, { at: at("01:00:00"), ...FAR })).code).toBe("OUTSIDE_RADIUS");
   });
 });
+
+describe("phone format", () => {
+  it("matches the app's formatPhone", async () => {
+    const f = async (v: string) => (await db.query<{ r: string | null }>("select app.format_phone($1) as r", [v])).rows[0].r;
+    expect(await f("+60 12-345 6789")).toBe("012-345 6789");
+    expect(await f("601123456789")).toBe("011-2345 6789");
+    expect(await f("03 1234 5678")).toBe("03-1234 5678");
+    expect(await f("047331234")).toBe("04-733 1234");
+    expect(await f("123")).toBe("123");
+  });
+});
