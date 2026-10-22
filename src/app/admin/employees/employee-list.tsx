@@ -54,7 +54,12 @@ export async function EmployeeList({
 
   return (
     <div className="space-y-4">
-      <PageTitle title={title} subtitle={`${all.length} orang`} />
+      <PageTitle title={title} subtitle={`${all.length} orang`} actions={
+        <a href={`/api/employees${branch ? `?branch=${branch}` : ""}`}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-neutral-bg">
+          ⬇ Muat turun CSV
+        </a>
+      } />
       <details className="rounded-xl border border-border bg-surface p-4">
         <summary className="cursor-pointer font-medium">+ Cipta akaun baharu</summary>
         <div className="mt-4">

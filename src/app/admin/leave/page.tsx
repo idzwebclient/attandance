@@ -42,6 +42,14 @@ export default async function AdminLeave({ searchParams }: PageProps<"/admin/lea
             );
           })}
       </div>
+      <div className="flex flex-wrap gap-2">
+        {([["requests", "Permohonan cuti"], ["balances", "Baki cuti"]] as const).map(([type, label]) => (
+          <a key={type} href={`/api/leave?${new URLSearchParams({ type, ...(branch ? { branch } : {}) })}`}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-neutral-bg">
+            ⬇ {label} (CSV)
+          </a>
+        ))}
+      </div>
       <LeaveApprovals supabase={supabase} today={todayIn(settings.timezone)} branchId={branch} />
       <section className="space-y-2">
         <h2 className="font-medium">Baki cuti pekerja {todayIn(settings.timezone).slice(0, 4)}</h2>

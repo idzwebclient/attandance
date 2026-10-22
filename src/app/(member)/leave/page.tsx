@@ -117,7 +117,13 @@ export default async function LeavePage() {
         <section className="space-y-2 border-t border-border pt-5">
           <h2 className="text-lg font-semibold">Permohonan pasukan</h2>
           <LeaveApprovals supabase={supabase} today={today} excludeEmployeeId={profile.id} staffOnly />
-          <h3 className="pt-2 font-medium">Baki cuti pasukan {year}</h3>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <h3 className="font-medium">Baki cuti pasukan {year}</h3>
+            <div className="flex gap-2">
+              <a href="/api/leave?type=requests" className="rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-neutral-bg">⬇ Permohonan (CSV)</a>
+              <a href="/api/leave?type=balances" className="rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-neutral-bg">⬇ Baki (CSV)</a>
+            </div>
+          </div>
           <LeaveBalanceTable supabase={supabase} today={today} hrefBase="/manager/employees/" />
         </section>
       )}
