@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Pekerja" };
 export default async function EmployeesPage({ searchParams }: PageProps<"/admin/employees">) {
   const { branch } = await searchParams;
   return (
-    <EmployeeList roles={["staff", "admin"]} title="Pekerja & admin" defaultRole="staff"
+    <EmployeeList roles={["manager", "staff", "admin"]} title="Semua pekerja" defaultRole="staff"
       basePath="/admin/employees" branch={typeof branch === "string" ? branch : undefined} />
   );
 }

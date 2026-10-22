@@ -39,7 +39,12 @@ export async function EmployeeList({
   const shown = branch ? all.filter((p) => (branch === "none" ? !p.branch_id : p.branch_id === branch)) : all;
   // Group by branch (A–Z), people without a branch last.
   const groups = [...branches, { id: null as string | null, name: "Tiada cawangan" }]
-    .map((b) => ({ ...b, people: shown.filter((p) => p.branch_id === b.id) }))
+    .map((b) => ({
+      ...b,
+      // The branch's manager heads its group.
+      people: shown.filter((p) => p.branch_id === b.id)
+        .sort((x, y) => Number(y.role === "manager") - Number(x.role === "manager")),
+    }))
     .filter((g) => g.people.length);
   const chips = [
     { key: "", label: "Semua", n: all.length },
