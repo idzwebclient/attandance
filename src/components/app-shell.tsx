@@ -37,18 +37,17 @@ export function AppShell({
             </span>
           </Link>
         </div>
-        {!bottomNav && (
-          <nav className="mx-auto max-w-6xl overflow-x-auto px-2 [scrollbar-width:none]">
-            <NavLinks items={nav} variant="tabs" />
-          </nav>
-        )}
+        {/* Phones get a bottom bar for staff and managers; wider screens always use tabs. */}
+        <nav className={`mx-auto max-w-6xl overflow-x-auto px-2 [scrollbar-width:none] ${bottomNav ? "hidden md:block" : ""}`}>
+          <NavLinks items={nav} variant="tabs" />
+        </nav>
       </header>
-      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 ${bottomNav ? "pb-24" : "pb-2"}`}>
+      <main className={`mx-auto w-full max-w-6xl flex-1 px-4 pt-5 ${bottomNav ? "pb-24 md:pb-2" : "pb-2"}`}>
         {children}
         <Credit className="mt-6" />
       </main>
       {bottomNav && (
-        <nav className="no-print fixed inset-x-0 bottom-0 z-10 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]">
+        <nav className="no-print fixed inset-x-0 bottom-0 z-10 border-t md:hidden border-border bg-white pb-[env(safe-area-inset-bottom)]">
           <NavLinks items={nav} variant="bottom" />
         </nav>
       )}

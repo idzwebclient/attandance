@@ -19,7 +19,7 @@ export default async function BranchDetail({ params }: PageProps<"/admin/branche
   const settings = await getSettings(supabase);
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle
         title={b.name}
         subtitle={b.is_active ? <Badge tone="good">Aktif</Badge> : <Badge tone="bad">Tidak aktif</Badge>}

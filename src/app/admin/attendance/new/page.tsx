@@ -14,7 +14,7 @@ export default async function NewAttendance({ searchParams }: PageProps<"/admin/
   const employees = await getActiveEmployees(supabase);
   const date = typeof sp.date === "string" && isDate(sp.date) ? sp.date : todayIn(settings.timezone);
   return (
-    <div className="max-w-2xl">
+    <div className="mx-auto max-w-2xl">
       <PageTitle
         title="Tambah / betulkan rekod"
         subtitle="Untuk pekerja yang terlupa punch. Jika rekod hari itu sudah wujud, masa akan digantikan."

@@ -12,7 +12,7 @@ export default async function NewBranch() {
   const { supabase } = await requireRole("admin");
   const settings = await getSettings(supabase);
   return (
-    <div className="max-w-2xl">
+    <div className="mx-auto max-w-2xl">
       <PageTitle title="Cawangan baharu" />
       <Card>
         <ActionForm action={createBranch} submitLabel="Cipta cawangan">

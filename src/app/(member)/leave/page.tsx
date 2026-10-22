@@ -26,7 +26,7 @@ export default async function LeavePage() {
   const types = (Object.keys(LEAVE_TYPE_LABEL) as LeaveType[]).filter((t) => policies.get(t)?.is_active ?? true);
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5">
       <PageTitle
         title="Cuti"
         subtitle={profile.role === "manager" ? "Permohonan anda diluluskan oleh admin." : "Permohonan diluluskan oleh manager cawangan atau admin."}

@@ -49,7 +49,7 @@ export async function FieldWorkView({
   );
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5">
       <PageTitle
         title="Kerja luar"
         subtitle="Pekerja yang dibenarkan punch tanpa QR di luar kedai pada tarikh tertentu. Lokasi GPS tetap direkod."

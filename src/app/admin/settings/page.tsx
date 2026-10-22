@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     .from("public_holidays").select("*").gte("holiday_date", `${today.slice(0, 4)}-01-01`).order("holiday_date");
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5">
       <PageTitle title="Tetapan" />
       <Card>
         <h2 className="mb-3 font-medium">Polisi kehadiran</h2>

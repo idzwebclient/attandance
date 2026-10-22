@@ -26,7 +26,7 @@ export default async function AdminLeave({ searchParams }: PageProps<"/admin/lea
   const pendingIn = (id: string) => (pending ?? []).filter((p) => p.branch_id === id).length;
   const tiers = (tierData ?? []) as { min_years: number; days: number }[];
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <PageTitle title="Cuti" subtitle="Luluskan atau tolak permohonan cuti staf dan manager." />
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
         {[{ id: "", name: "Semua cawangan", n: (pending ?? []).length }, ...[...branchNames].map(([id, name]) => ({ id, name, n: pendingIn(id) }))]
