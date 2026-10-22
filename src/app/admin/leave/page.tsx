@@ -114,10 +114,10 @@ export default async function AdminLeave({ searchParams }: PageProps<"/admin/lea
                         <input type="number" name="carry_forward_max_days" min={0} max={366} defaultValue={settings.carry_forward_max_days}
                           className={`${inputClass} !min-h-8 !w-16 !py-0.5`} />
                         <span>hari, mesti guna sebelum</span>
-                        <select name="carry_forward_day" defaultValue={settings.carry_forward_day} className={`${inputClass} !min-h-8 !w-16 !py-0.5`}>
+                        <select name="carry_forward_day" defaultValue={settings.carry_forward_day} className={`${inputClass} !min-h-8 !w-20 !py-0.5`}>
                           {Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
                         </select>
-                        <select name="carry_forward_month" defaultValue={settings.carry_forward_month} className={`${inputClass} !min-h-8 !w-20 !py-0.5`}>
+                        <select name="carry_forward_month" defaultValue={settings.carry_forward_month} className={`${inputClass} !min-h-8 !w-24 !py-0.5`}>
                           {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                         </select>
                         <span className="w-full text-xs text-muted">0 hari = tiada bawaan. Baki bawaan yang tak diguna sebelum tarikh ini hangus.</span>

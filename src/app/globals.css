@@ -68,3 +68,15 @@ input[type="time"] {
   display: block;
   min-width: 0;
 }
+
+/* One dropdown arrow everywhere, with room from the edge. Unlayered so it wins
+   over the px-* utilities on inputClass. */
+select:not([multiple]) {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1.1rem;
+  padding-right: 2.6rem;
+}
