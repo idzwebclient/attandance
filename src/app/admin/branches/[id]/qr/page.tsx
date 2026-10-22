@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { requireRole } from "@/lib/auth";
 import { qrPayload } from "@/lib/format";
 import type { Branch } from "@/lib/types";
-import { PrintButton } from "./print-button";
+import { DownloadButton, PrintButton } from "./print-button";
 
 export const metadata: Metadata = { title: "Cetak QR" };
 
@@ -19,7 +19,8 @@ export default async function BranchQr({ params }: PageProps<"/admin/branches/[i
   const origin =
     process.env.NEXT_PUBLIC_SITE_URL ??
     `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
-  const svg = await QRCode.toString(qrPayload(origin, b.qr_identifier), {
+  const payload = qrPayload(origin, b.qr_identifier);
+  const svg = await QRCode.toString(payload, {
     type: "svg",
     errorCorrectionLevel: "M",
     margin: 2,
@@ -27,7 +28,10 @@ export default async function BranchQr({ params }: PageProps<"/admin/branches/[i
 
   return (
     <div className="mx-auto max-w-lg text-center">
-      <div className="no-print mb-4 flex justify-center"><PrintButton /></div>
+      <div className="no-print mb-4 flex justify-center gap-2">
+        <PrintButton />
+        <DownloadButton payload={payload} branchName={b.name} code={b.qr_identifier.slice(0, 8)} />
+      </div>
       <div className="rounded-2xl border-4 border-black bg-white p-8 text-black">
         <div className="text-3xl font-bold">IMBAS UNTUK KEHADIRAN</div>
         <div className="mt-1 text-xl">{b.name}</div>
