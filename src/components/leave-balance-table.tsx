@@ -32,11 +32,13 @@ export async function LeaveBalanceTable({
   supabase,
   today,
   employeeId,
+  branchId,
   hrefBase,
 }: {
   supabase: SupabaseClient;
   today: string;
   employeeId?: string;
+  branchId?: string;
   /** Employee link prefix, e.g. "/admin/employees/". */
   hrefBase?: string;
 }) {
@@ -44,6 +46,7 @@ export async function LeaveBalanceTable({
   let q = supabase.from("profiles").select("id, full_name, employee_code, probation_end_date")
     .in("role", ["staff", "manager"]).eq("is_active", true).order("full_name");
   if (employeeId) q = q.eq("id", employeeId);
+  if (branchId) q = q.eq("branch_id", branchId);
   const [{ data: people }, balances, policies] = await Promise.all([
     q,
     getLeaveBalances(supabase, year, employeeId),

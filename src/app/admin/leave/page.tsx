@@ -1,27 +1,53 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ActionForm } from "@/components/form-state";
 import { LeaveApprovals } from "@/components/leave-approvals";
 import { LeaveBalanceTable } from "@/components/leave-balance-table";
 import { Card, PageTitle, inputClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
-import { getLeavePolicies, getSettings } from "@/lib/data";
+import { getBranchNames, getLeavePolicies, getSettings } from "@/lib/data";
 import { LEAVE_TYPE_LABEL, MONTH_NAMES, todayIn } from "@/lib/format";
 import { updateLeavePolicies } from "@/lib/leave-actions";
 import type { LeaveType } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Cuti" };
 
-export default async function AdminLeave() {
+export default async function AdminLeave({ searchParams }: PageProps<"/admin/leave">) {
   const { supabase } = await requireRole("admin");
-  const [settings, policies, { data: tierData }] = await Promise.all([
+  const { branch: rawBranch } = await searchParams;
+  const [settings, policies, { data: tierData }, branchNames, { data: pending }] = await Promise.all([
     getSettings(supabase),
     getLeavePolicies(supabase),
     supabase.from("annual_leave_tiers").select("min_years, days").order("min_years"),
+    getBranchNames(supabase),
+    supabase.from("leave_requests").select("branch_id").eq("status", "PENDING"),
   ]);
+  const branch = typeof rawBranch === "string" && branchNames.has(rawBranch) ? rawBranch : undefined;
+  const pendingIn = (id: string) => (pending ?? []).filter((p) => p.branch_id === id).length;
   const tiers = (tierData ?? []) as { min_years: number; days: number }[];
   return (
     <div className="max-w-3xl space-y-5">
       <PageTitle title="Cuti" subtitle="Luluskan atau tolak permohonan cuti staf dan manager." />
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        {[{ id: "", name: "Semua cawangan", n: (pending ?? []).length }, ...[...branchNames].map(([id, name]) => ({ id, name, n: pendingIn(id) }))]
+          .map((b) => {
+            const active = (branch ?? "") === b.id;
+            return (
+              <Link key={b.id || "all"} href={b.id ? `/admin/leave?branch=${b.id}` : "/admin/leave"}
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
+                  active ? "border-brand bg-brand text-brand-fg" : "border-border bg-surface hover:bg-neutral-bg"}`}>
+                {b.name}
+                {b.n > 0 && <span className="ml-1.5 rounded-full bg-warn-bg px-1.5 text-xs text-warn">{b.n}</span>}
+              </Link>
+            );
+          })}
+      </div>
+      <LeaveApprovals supabase={supabase} today={todayIn(settings.timezone)} branchId={branch} />
+      <section className="space-y-2">
+        <h2 className="font-medium">Baki cuti pekerja {todayIn(settings.timezone).slice(0, 4)}</h2>
+        <p className="text-xs text-muted">Hari tinggal / jumlah setahun. Termasuk permohonan yang masih menunggu.</p>
+        <LeaveBalanceTable supabase={supabase} today={todayIn(settings.timezone)} branchId={branch} hrefBase="/admin/employees/" />
+      </section>
       <Card>
         <h2 className="mb-1 font-medium">Polisi cuti</h2>
         <p className="mb-3 text-sm text-muted">
@@ -99,12 +125,6 @@ export default async function AdminLeave() {
           </div>
         </ActionForm>
       </Card>
-      <LeaveApprovals supabase={supabase} today={todayIn(settings.timezone)} />
-      <section className="space-y-2">
-        <h2 className="font-medium">Baki cuti pekerja {todayIn(settings.timezone).slice(0, 4)}</h2>
-        <p className="text-xs text-muted">Hari tinggal / jumlah setahun. Termasuk permohonan yang masih menunggu.</p>
-        <LeaveBalanceTable supabase={supabase} today={todayIn(settings.timezone)} hrefBase="/admin/employees/" />
-      </section>
     </div>
   );
 }

@@ -18,15 +18,18 @@ export async function LeaveApprovals({
   today,
   excludeEmployeeId,
   staffOnly,
+  branchId,
 }: {
   supabase: SupabaseClient;
   today: string;
   excludeEmployeeId?: string;
   staffOnly?: boolean;
+  branchId?: string;
 }) {
   const [{ data }, balances] = await Promise.all([supabase.from("leave_requests")
     .select("*, employee:profiles!leave_requests_employee_id_fkey(full_name, employee_code, role), branch:branches(name)")
     .or(`status.eq.PENDING,end_date.gte.${addDays(today, -30)}`)
+    .match(branchId ? { branch_id: branchId } : {})
     .order("start_date")
     .limit(300), getLeaveBalances(supabase, Number(today.slice(0, 4)))]);
   type Row = LeaveRequest & {
