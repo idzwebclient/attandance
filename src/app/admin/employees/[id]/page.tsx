@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AttendanceTable } from "@/components/attendance-table";
 import { MonthSwitcher } from "@/components/month-switcher";
+import { DeleteButton } from "@/components/delete-button";
 import { ActionForm } from "@/components/form-state";
 import { LeaveBalanceTable } from "@/components/leave-balance-table";
 import { MonthlySummaryTable } from "@/components/monthly-summary-table";
@@ -11,7 +12,7 @@ import { getBranchNames, getMonthlySummary, getMonthReports, getSettings, pickMo
 import { formatPeriod, todayIn } from "@/lib/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/lib/types";
-import { resetPassword, setEmployeeActive, updateEmployee } from "../../actions";
+import { deleteEmployee, resetPassword, setEmployeeActive, updateEmployee } from "../../actions";
 import { EmployeeFields } from "../employee-fields";
 
 export const metadata: Metadata = { title: "Urus pekerja" };
@@ -23,11 +24,13 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
   if (!p) notFound();
   const settings = await getSettings(supabase);
   const month = pickMonth((await searchParams).month, settings);
-  const [branchNames, { data: user }, rows, summary] = await Promise.all([
+  const [branchNames, { data: user }, rows, summary, { count: dayCount }, { count: leaveCount }] = await Promise.all([
     getBranchNames(supabase),
     createAdminClient().auth.admin.getUserById(p.auth_user_id),
     getMonthReports(supabase, month, settings, { employeeId: p.id }),
     getMonthlySummary(supabase, month, settings, { employeeId: p.id }),
+    supabase.from("attendance_days").select("id", { count: "exact", head: true }).eq("employee_id", p.id),
+    supabase.from("leave_requests").select("id", { count: "exact", head: true }).eq("employee_id", p.id),
   ]);
   const branches = [...branchNames].map(([bid, name]) => ({ id: bid, name }));
 
@@ -38,6 +41,7 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
         subtitle={<>{user?.user?.email ?? "—"} · {p.is_active ? <Badge tone="good">Aktif</Badge> : <Badge tone="bad">Tidak aktif</Badge>}</>}
         actions={
           p.id !== me.id && (
+            <>
             <form action={setEmployeeActive}>
               <input type="hidden" name="id" value={p.id} />
               <input type="hidden" name="active" value={String(!p.is_active)} />
@@ -45,6 +49,13 @@ export default async function EmployeeDetail({ params, searchParams }: PageProps
                 {p.is_active ? "Nyahaktifkan" : "Aktifkan semula"}
               </Button>
             </form>
+            <DeleteButton action={deleteEmployee} id={p.id} title={`Padam ${p.full_name}?`}>
+              <p>
+                Akaun log masuk, {dayCount ?? 0} hari rekod kehadiran dan {leaveCount ?? 0} permohonan cuti milik {p.full_name} akan dipadam terus.
+              </p>
+              <p>Jika hanya mahu menghalang log masuk dan simpan rekod lama, guna <b>Nyahaktifkan</b>.</p>
+            </DeleteButton>
+            </>
           )
         }
       />

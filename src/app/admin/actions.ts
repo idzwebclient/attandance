@@ -141,6 +141,17 @@ export async function setEmployeeActive(fd: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+// Permanently removes the person, their attendance/leave records and their login.
+export async function deleteEmployee(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { supabase } = await requireRole("admin");
+  const { data, error } = await supabase.rpc("admin_delete_employee", { p_employee_id: str(fd, "id") });
+  if (error) return { error: "Padam gagal. Cuba lagi." };
+  if (!data.ok) return { error: data.message };
+  await createAdminClient().auth.admin.deleteUser(data.auth_user_id);
+  revalidatePath("/admin", "layout");
+  redirect(data.role === "manager" ? "/admin/managers" : "/admin/employees");
+}
+
 export async function resetPassword(_prev: FormState, fd: FormData): Promise<FormState> {
   const { supabase } = await requireRole("admin");
   const password = str(fd, "password");
@@ -194,6 +205,15 @@ export async function setBranchActive(fd: FormData) {
   const { supabase } = await requireRole("admin");
   await supabase.from("branches").update({ is_active: str(fd, "active") === "true" }).eq("id", str(fd, "id"));
   revalidatePath("/admin", "layout");
+}
+
+export async function deleteBranch(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { supabase } = await requireRole("admin");
+  const { data, error } = await supabase.rpc("admin_delete_branch", { p_branch_id: str(fd, "id") });
+  if (error) return { error: "Padam gagal. Cuba lagi." };
+  if (!data.ok) return { error: data.message };
+  revalidatePath("/admin", "layout");
+  redirect("/admin/branches");
 }
 
 export async function regenerateQr(fd: FormData) {

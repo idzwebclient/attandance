@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteButton } from "@/components/delete-button";
 import { ActionForm } from "@/components/form-state";
 import { Badge, Button, Card, PageTitle, buttonClass } from "@/components/ui";
 import { requireRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import type { Branch } from "@/lib/types";
-import { regenerateQr, setBranchActive, updateBranch } from "../../actions";
+import { deleteBranch, regenerateQr, setBranchActive, updateBranch } from "../../actions";
 import { BranchFields } from "../branch-fields";
 
 export const metadata: Metadata = { title: "Urus cawangan" };
@@ -16,7 +17,11 @@ export default async function BranchDetail({ params }: PageProps<"/admin/branche
   const { id } = await params;
   const { data: b } = await supabase.from("branches").select("*").eq("id", id).maybeSingle<Branch>();
   if (!b) notFound();
-  const settings = await getSettings(supabase);
+  const [settings, { count: staffCount }, { count: dayCount }] = await Promise.all([
+    getSettings(supabase),
+    supabase.from("profiles").select("id", { count: "exact", head: true }).eq("branch_id", b.id),
+    supabase.from("attendance_days").select("id", { count: "exact", head: true }).eq("branch_id", b.id),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -33,6 +38,16 @@ export default async function BranchDetail({ params }: PageProps<"/admin/branche
                 {b.is_active ? "Nyahaktifkan" : "Aktifkan"}
               </Button>
             </form>
+            <DeleteButton action={deleteBranch} id={b.id} title={`Padam cawangan ${b.name}?`}>
+              {staffCount ? (
+                <p>
+                  Cawangan ini masih ada <b>{staffCount} pekerja/manager</b>. Pindahkan mereka ke cawangan lain atau padam mereka dahulu.
+                </p>
+              ) : (
+                <p>Cawangan ini dan {dayCount ?? 0} hari rekod kehadiran yang dibuat di sini akan dipadam terus.</p>
+              )}
+              <p>Jika hanya mahu berhenti guna cawangan ini dan simpan rekod lama, guna <b>Nyahaktifkan</b>.</p>
+            </DeleteButton>
           </>
         }
       />
