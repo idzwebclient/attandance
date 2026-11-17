@@ -20,6 +20,7 @@ import {
   minutes,
 } from "@/lib/format";
 import { clearPosition, getFreshPosition, LocationError, warmUpPosition, type Position } from "@/lib/geolocation";
+import { flushPunchIssues, reportPunchIssue } from "@/lib/punch-issues";
 import { createClient } from "@/lib/supabase/client";
 import type { AttendanceContext, AttendanceDay, EventType, SubmitResult } from "@/lib/types";
 
@@ -38,14 +39,17 @@ const STEPS: { event: EventType; field: keyof AttendanceDay }[] = [
 ];
 
 // Tells "no internet" apart from the server refusing or failing the request.
-function networkMessage(error?: { code?: string; message?: string } | null) {
+function networkFailure(error?: { code?: string; message?: string } | null) {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return "Tiada sambungan internet. Kehadiran tidak direkodkan.";
+    return { code: "OFFLINE", message: "Tiada sambungan internet. Kehadiran tidak direkodkan." } as const;
   }
   if (error?.code && !/fetch|network/i.test(error.message ?? "")) {
-    return `Ralat sistem semasa merekod (kod ${error.code}). Kehadiran tidak direkodkan. Sila maklumkan admin.`;
+    return {
+      code: "SERVER_ERROR",
+      message: `Ralat sistem semasa merekod (kod ${error.code}). Kehadiran tidak direkodkan. Sila maklumkan admin.`,
+    } as const;
   }
-  return "Pelayan tidak dapat dihubungi. Kehadiran tidak direkodkan. Cuba lagi.";
+  return { code: "SERVER_UNREACHABLE", message: "Pelayan tidak dapat dihubungi. Kehadiran tidak direkodkan. Cuba lagi." } as const;
 }
 
 export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceContext; scannedQr: string | null }) {
@@ -63,14 +67,24 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
 
   useEffect(() => {
     warmUpPosition();
+    // Send punch problems that were saved while the phone had no internet.
+    flushPunchIssues();
+    window.addEventListener("online", flushPunchIssues);
+    return () => window.removeEventListener("online", flushPunchIssues);
   }, []);
 
   // Resolves to null (with the error shown) when no location can be read.
-  const locate = useCallback(async (): Promise<Position | null> => {
+  const locate = useCallback(async (event: EventType): Promise<Position | null> => {
     try {
       return await getFreshPosition();
     } catch (e) {
-      setPhase({ kind: "error", message: e instanceof LocationError ? e.message : "Lokasi tidak dapat diperoleh." });
+      const message = e instanceof LocationError ? e.message : "Lokasi tidak dapat diperoleh.";
+      setPhase({ kind: "error", message });
+      reportPunchIssue(e instanceof LocationError ? e.code : "LOCATION_UNAVAILABLE", {
+        message,
+        event,
+        detail: e instanceof LocationError ? null : String(e).slice(0, 200),
+      });
       return null;
     }
   }, []);
@@ -90,7 +104,13 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
         p_client_time: new Date().toISOString(),
       });
       if (error || !data) {
-        setPhase({ kind: "error", message: networkMessage(error) });
+        const failure = networkFailure(error);
+        setPhase({ kind: "error", message: failure.message });
+        reportPunchIssue(failure.code, {
+          message: failure.message,
+          event,
+          detail: error ? `${error.code ?? ""} ${error.message ?? ""}`.trim().slice(0, 200) : null,
+        });
         return;
       }
       const result = data as SubmitResult;
@@ -114,7 +134,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
   const start = useCallback(
     (event: EventType) => {
       // GPS and camera run at the same time; the server decides everything else.
-      const position = locate();
+      const position = locate(event);
       if (pendingQr) {
         submit(event, position, pendingQr);
       } else if (ctx.ok && (ctx.field_work || ctx.qr_exempt)) {
@@ -144,6 +164,7 @@ export function AttendanceClient({ initial, scannedQr }: { initial: AttendanceCo
     <div className="mx-auto max-w-md space-y-4">
       {phase.kind === "scan" && (
         <QrScannerView
+          event={phase.event}
           onCancel={() => setPhase({ kind: "idle" })}
           onResult={(id) => submit(phase.event, phase.position, id)}
         />

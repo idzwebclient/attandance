@@ -24,6 +24,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/employees", label: "Pekerja", icon: "users" },
   { href: "/admin/managers", label: "Manager", icon: "badge" },
   { href: "/admin/field-work", label: "Kerja luar", icon: "pin" },
+  { href: "/admin/punch-issues", label: "Masalah punch", icon: "alert" },
   { href: "/admin/leave", label: "Cuti", icon: "calendar" },
   { href: "/admin/branches", label: "Cawangan", icon: "building" },
   { href: "/admin/reports", label: "Laporan", icon: "chart" },
